@@ -1,0 +1,735 @@
+<!-- © 2026 GoElev8.ai | Aaron Bryant. All rights reserved. Unauthorized use prohibited. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Will Power Fitness Factory | Personal Trainer · St. Louis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=Barlow:wght@300;400&display=swap" rel="stylesheet"/>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:   #0b0b0b;
+      --char:    #161616;
+      --dark:    #202020;
+      --mid:     #2a2a2a;
+      --border:  #363636;
+      --silver:  #808080;
+      --light:   #b8b8b8;
+      --white:   #f2f2f2;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--white); font-family: 'Barlow Condensed', sans-serif; font-weight: 300; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+    /* ════════════════════════════════
+       LOGO COMPONENT  (reusable)
+    ════════════════════════════════ */
+    /* 
+      The logo is text-based: "WILL" on top, "P[kettlebell]WER" below, 
+      with "★ FITNESS FACTORY ★" as a subtitle.
+      We render it purely with CSS + a single inline SVG kettlebell glyph
+      so it always looks crisp at any size.
+    */
+    .wpff-logo {
+      display: inline-flex;
+      flex-direction: column;
+      line-height: 1;
+      text-decoration: none;
+      gap: 0;
+    }
+    .wpff-logo .row1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: var(--logo-sz, 28px);
+      letter-spacing: 0.06em;
+      color: var(--white);
+      line-height: 1;
+    }
+    .wpff-logo .row2 {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: var(--logo-sz, 28px);
+      color: var(--white);
+      line-height: 1;
+    }
+    /* The kettlebell SVG sits inline, sized relative to the font */
+    .wpff-logo .kb {
+      display: inline-block;
+      width: calc(var(--logo-sz, 28px) * 0.78);
+      height: calc(var(--logo-sz, 28px) * 0.78);
+      margin: 0 1px;
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+    .wpff-logo .row3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 400;
+      font-size: calc(var(--logo-sz, 28px) * 0.28);
+      letter-spacing: 0.32em;
+      color: var(--silver);
+      text-transform: uppercase;
+      margin-top: 3px;
+      white-space: nowrap;
+    }
+
+    /* ════════════════════════════════
+       NAV
+    ════════════════════════════════ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; height: 60px;
+      background: rgba(11,11,11,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { --logo-sz: 22px; }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; list-style: none; }
+    .nav-links a { font-family: 'Barlow Condensed', sans-serif; font-weight: 500; font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver); text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--white); }
+    .nav-book {
+      background: var(--white); color: var(--black);
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+      text-decoration: none; padding: 0.45rem 1.1rem;
+      transition: opacity 0.2s;
+    }
+    .nav-book:hover { opacity: 0.88; }
+
+    /* ════════════════════════════════
+       HERO  — mobile-first
+    ════════════════════════════════ */
+    .hero {
+      min-height: 100svh;
+      padding-top: 60px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      overflow: hidden;
+    }
+
+    /* Background: William on stage — competition photo */
+    .hero-bg-img {
+      position: absolute; inset: 0;
+      background-image: url('/mnt/user-data/uploads/IMG_2543.png');
+      background-size: cover;
+      background-position: center top;
+      filter: grayscale(40%) brightness(0.55) contrast(1.1);
+    }
+
+    /* gradient overlay so text is always readable */
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(11,11,11,0.35) 0%,
+        rgba(11,11,11,0.1)  35%,
+        rgba(11,11,11,0.65) 65%,
+        rgba(11,11,11,0.97) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative; z-index: 2;
+      padding: 0 20px 36px;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500; font-size: 0.68rem; letter-spacing: 0.42em;
+      text-transform: uppercase; color: var(--silver);
+      margin-bottom: 14px;
+    }
+
+    h1.hero-h {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4.2rem, 18vw, 8rem);
+      line-height: 0.88;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    h1.hero-h .outline {
+      -webkit-text-stroke: 1.5px var(--white);
+      color: transparent;
+    }
+
+    .hero-sub {
+      font-family: 'Barlow', sans-serif;
+      font-weight: 300; font-size: 0.95rem; line-height: 1.7;
+      color: var(--light); max-width: 38ch; margin-bottom: 24px;
+    }
+
+    .hero-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-w {
+      background: var(--white); color: var(--black);
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.82rem; letter-spacing: 0.22em; text-transform: uppercase;
+      text-decoration: none; padding: 14px 28px; display: inline-block;
+      transition: opacity 0.2s;
+    }
+    .btn-w:hover { opacity: 0.88; }
+    .btn-ol {
+      border: 1px solid rgba(255,255,255,0.3); color: var(--light);
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
+      font-size: 0.82rem; letter-spacing: 0.22em; text-transform: uppercase;
+      text-decoration: none; padding: 14px 28px; display: inline-block;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ol:hover { border-color: var(--white); color: var(--white); }
+
+    /* stat strip */
+    .stat-strip {
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: repeat(4,1fr);
+      border-top: 1px solid var(--border);
+    }
+    .stat {
+      padding: 14px 16px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat .v { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--white); letter-spacing: 0.04em; line-height: 1; }
+    .stat .l { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver); margin-top: 3px; }
+
+    /* ════════════════════════════════
+       MARQUEE
+    ════════════════════════════════ */
+    .marquee { background: var(--white); padding: 11px 0; overflow: hidden; white-space: nowrap; }
+    .marquee-t { display: inline-flex; animation: scroll 30s linear infinite; }
+    .mi { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--black); padding: 0 1.8rem; }
+    .ms { color: #999; }
+    @keyframes scroll { to { transform: translateX(-50%); } }
+
+    /* ════════════════════════════════
+       SECTION WRAPPER
+    ════════════════════════════════ */
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+    .sec { padding: 64px 0; }
+    .sec-bg { background: var(--char); }
+    .ey { display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 500; font-size: 0.65rem; letter-spacing: 0.42em; text-transform: uppercase; color: var(--silver); margin-bottom: 8px; }
+    .sec-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2rem, 7vw, 3.4rem); letter-spacing: 0.04em; line-height: 1; }
+    .sec-sub { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 0.95rem; line-height: 1.72; color: var(--silver); max-width: 50ch; margin-top: 10px; }
+    .sec-hd { margin-bottom: 36px; }
+
+    /* ════════════════════════════════
+       PROGRAMS GRID
+    ════════════════════════════════ */
+    .prog-grid { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--border); }
+    @media(min-width:600px){ .prog-grid { grid-template-columns: 1fr 1fr; } }
+    @media(min-width:900px){ .prog-grid { grid-template-columns: repeat(4,1fr); } }
+
+    .prog-card {
+      background: var(--char); padding: 28px 22px;
+      text-decoration: none; color: inherit; display: block;
+      position: relative; overflow: hidden; transition: background 0.22s;
+    }
+    .prog-card::after { content:''; position:absolute; left:0; top:0; width:2px; height:0; background:var(--white); transition:height 0.35s ease; }
+    .prog-card:hover { background: var(--dark); }
+    .prog-card:hover::after { height:100%; }
+    .prog-n { font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: rgba(255,255,255,0.06); line-height: 1; margin-bottom: 14px; transition: color 0.22s; }
+    .prog-card:hover .prog-n { color: rgba(255,255,255,0.12); }
+    .prog-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.15rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+    .prog-desc { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 0.87rem; line-height: 1.7; color: var(--silver); }
+    .prog-cta { display: inline-block; margin-top: 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.28em; text-transform: uppercase; color: var(--white); opacity: 0; transform: translateX(-6px); transition: opacity 0.22s, transform 0.22s; }
+    .prog-card:hover .prog-cta { opacity:1; transform:translateX(0); }
+
+    /* ════════════════════════════════
+       WILLIAM BIO + PHOTOS
+    ════════════════════════════════ */
+    .bio-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    @media(min-width:800px){ .bio-grid { grid-template-columns: 1fr 1.1fr; gap: 64px; align-items: center; } }
+
+    /* photo mosaic */
+    .photo-mosaic {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 4px;
+    }
+    .photo-mosaic .p-main {
+      grid-column: 1 / -1;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      position: relative;
+    }
+    .photo-mosaic .p-sub {
+      aspect-ratio: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .photo-mosaic img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: grayscale(20%) contrast(1.05);
+      transition: transform 0.4s ease;
+    }
+    .photo-mosaic .p-main img { object-position: center 20%; }
+    .photo-mosaic .p-sub:nth-child(3) img { object-position: center 15%; }
+    .photo-mosaic .p-sub:nth-child(4) img { object-position: center 30%; }
+    .photo-mosaic div:hover img { transform: scale(1.04); }
+
+    /* corner brackets on main photo */
+    .photo-mosaic .p-main::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 44px; height: 44px;
+      border-top: 2px solid var(--white); border-left: 2px solid var(--white);
+      z-index: 2;
+    }
+    .photo-mosaic .p-main::after {
+      content: ''; position: absolute; bottom: 0; right: 0;
+      width: 44px; height: 44px;
+      border-bottom: 2px solid var(--white); border-right: 2px solid var(--white);
+      z-index: 2;
+    }
+
+    /* badge overlay on mosaic */
+    .competition-badge {
+      position: absolute; bottom: 12px; left: 12px; z-index: 3;
+      background: rgba(11,11,11,0.88);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      backdrop-filter: blur(4px);
+    }
+    .competition-badge .cb-top { font-family:'Bebas Neue',sans-serif; font-size:0.9rem; letter-spacing:0.1em; color:var(--white); }
+    .competition-badge .cb-bot { font-size:0.62rem; letter-spacing:0.22em; text-transform:uppercase; color:var(--silver); margin-top:1px; }
+
+    /* bio copy */
+    .bio-name { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.8rem, 8vw, 3.8rem); letter-spacing: 0.03em; line-height: 0.93; margin-bottom: 6px; }
+    .bio-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 400; font-size: 0.78rem; letter-spacing: 0.32em; text-transform: uppercase; color: var(--silver); margin-bottom: 24px; }
+    .bio-text { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 0.95rem; line-height: 1.8; color: var(--silver); margin-bottom: 16px; }
+    .creds { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
+    .cred { font-family: 'Barlow Condensed', sans-serif; font-weight: 500; font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--light); border: 1px solid var(--border); padding: 4px 10px; }
+
+    /* Flex Facility callout */
+    .flex-callout {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--dark); border: 1px solid var(--border);
+      padding: 14px 16px; margin-bottom: 28px;
+    }
+    .flex-callout .fc-logo {
+      width: 40px; height: 40px; flex-shrink: 0;
+      background: var(--mid); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .flex-callout .fc-text .fc-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .flex-callout .fc-text .fc-sub { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--silver); margin-top: 2px; }
+
+    /* ════════════════════════════════
+       SMS BAND
+    ════════════════════════════════ */
+    .sms-band { background: var(--dark); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .sms-inner { display: flex; flex-direction: column; gap: 24px; padding: 48px 0; }
+    @media(min-width:700px){ .sms-inner { flex-direction: row; align-items: center; justify-content: space-between; gap: 40px; } }
+    .sms-pre { font-family: 'Barlow Condensed', sans-serif; font-size: 0.65rem; letter-spacing: 0.42em; text-transform: uppercase; color: var(--silver); margin-bottom: 6px; }
+    .sms-h { font-family: 'Bebas Neue', sans-serif; font-size: clamp(1.5rem, 5vw, 2rem); letter-spacing: 0.04em; }
+    .sms-p { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 0.88rem; color: var(--silver); margin-top: 6px; }
+    .sms-form { display: flex; flex-direction: column; gap: 8px; }
+    @media(min-width:400px){ .sms-form { flex-direction: row; gap: 0; } }
+    .sms-input { background: var(--mid); border: 1px solid var(--border); color: var(--white); font-family: 'Barlow', sans-serif; font-size: 0.92rem; padding: 13px 16px; outline: none; width: 100%; transition: border-color 0.2s; }
+    @media(min-width:400px){ .sms-input { width: 230px; border-right: none; } }
+    .sms-input::placeholder { color: var(--silver); }
+    .sms-input:focus { border-color: var(--white); }
+    .sms-btn { background: var(--white); color: var(--black); border: none; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.76rem; letter-spacing: 0.24em; text-transform: uppercase; padding: 13px 20px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+    .sms-btn:hover { opacity: 0.88; }
+    .sms-note { font-size: 0.65rem; color: var(--silver); line-height: 1.5; margin-top: 8px; max-width: 280px; }
+
+    /* ════════════════════════════════
+       TRANSFORMATION
+    ════════════════════════════════ */
+    .transform-grid {
+      display: grid; grid-template-columns: 1fr;
+      gap: 1px; background: var(--border);
+    }
+    @media(min-width:640px){ .transform-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+    .testi-card { background: var(--char); padding: 28px; }
+    .q { font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; line-height: 0.7; color: rgba(255,255,255,0.06); margin-bottom: 8px; display: block; }
+    .testi-text { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 0.92rem; line-height: 1.75; color: var(--silver); margin-bottom: 20px; }
+    .testi-stars { color: var(--white); font-size: 0.7rem; letter-spacing: 0.1em; margin-bottom: 5px; }
+    .testi-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .testi-role { font-size: 0.66rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver); }
+
+    /* competition card */
+    .comp-card {
+      background: var(--char);
+      position: relative; overflow: hidden;
+    }
+    .comp-img { width: 100%; aspect-ratio: 4/5; object-fit: cover; object-position: center top; filter: grayscale(10%) brightness(0.8); display: block; }
+    .comp-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 24px 20px 20px;
+      background: linear-gradient(to top, rgba(11,11,11,0.96) 0%, transparent 100%);
+    }
+    .comp-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.08em; margin-bottom: 3px; }
+    .comp-sub { font-size: 0.68rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver); }
+
+    /* ════════════════════════════════
+       BOOK CTA BAND
+    ════════════════════════════════ */
+    .cta-band {
+      background: var(--white); color: var(--black);
+      text-align: center; padding: 72px 20px;
+      position: relative; overflow: hidden;
+    }
+    .cta-band::before {
+      content: 'WILLPOWER';
+      position: absolute; font-family: 'Bebas Neue', sans-serif;
+      font-size: 22vw; color: rgba(0,0,0,0.05);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      white-space: nowrap; pointer-events: none;
+    }
+    .cta-band .ey { color: var(--silver); }
+    .cta-band h2 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.4rem, 10vw, 5rem); letter-spacing: 0.04em; color: var(--black); margin-bottom: 12px; position: relative; }
+    .cta-band p { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 1rem; color: #555; max-width: 44ch; margin: 0 auto 28px; line-height: 1.7; position: relative; }
+    .btn-blk { background: var(--black); color: var(--white); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.82rem; letter-spacing: 0.24em; text-transform: uppercase; text-decoration: none; padding: 15px 32px; display: inline-block; transition: opacity 0.2s; position: relative; }
+    .btn-blk:hover { opacity: 0.85; }
+
+    /* ════════════════════════════════
+       FOOTER
+    ════════════════════════════════ */
+    footer { background: #070707; border-top: 1px solid var(--border); }
+    .footer-grid { display: grid; grid-template-columns: 1fr; gap: 32px; padding: 52px 0 40px; }
+    @media(min-width:700px){ .footer-grid { grid-template-columns: 2fr 1fr 1fr; gap: 48px; } }
+    .footer-logo { --logo-sz: 20px; }
+    .footer-tagline { font-family:'Barlow',sans-serif; font-weight:300; font-size:0.85rem; color:var(--silver); line-height:1.65; margin-top:12px; max-width:30ch; }
+    .social-row { display:flex; gap:8px; margin-top:18px; }
+    .soc { width:34px; height:34px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.62rem; letter-spacing:0.06em; color:var(--silver); text-decoration:none; transition:border-color 0.2s,color 0.2s; }
+    .soc:hover { border-color:var(--white); color:var(--white); }
+    .fc-col h4 { font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:0.66rem; letter-spacing:0.32em; text-transform:uppercase; color:var(--light); margin-bottom:14px; }
+    .fc-col ul { list-style:none; }
+    .fc-col li { font-family:'Barlow',sans-serif; font-weight:300; font-size:0.85rem; color:var(--silver); line-height:2.1; }
+    .fc-col a { color:var(--silver); text-decoration:none; transition:color 0.2s; }
+    .fc-col a:hover { color:var(--white); }
+    .footer-bot { border-top:1px solid var(--border); padding:18px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+    .footer-bot p { font-family:'Barlow',sans-serif; font-weight:300; font-size:0.7rem; color:#404040; }
+    .footer-bot a { color:var(--silver); text-decoration:none; }
+    .footer-bot a:hover { color:var(--white); }
+
+    /* ════════════════════════════════
+       REVEAL ANIMATION
+    ════════════════════════════════ */
+    .r { opacity:0; transform:translateY(22px); transition:opacity 0.55s ease, transform 0.55s ease; }
+    .r.in { opacity:1; transform:translateY(0); }
+
+    /* ════════════════════════════════
+       NAV HIDE ON MOBILE
+    ════════════════════════════════ */
+    @media(max-width:680px){
+      .nav-links { display:none; }
+      nav { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <a href="#" class="wpff-logo nav-logo" aria-label="Will Power Fitness Factory">
+    <span class="row1">WILL</span>
+    <span class="row2">P<svg class="kb" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- handle -->
+      <path d="M8 16 Q8 4 16 4 Q24 4 24 16" stroke="#f2f2f2" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <!-- bell body -->
+      <ellipse cx="16" cy="26" rx="14" ry="11" fill="#f2f2f2"/>
+      <!-- lightning bolt cutout -->
+      <path d="M19 18 L11 26 L15.5 26 L13 34 L21 24 L16.5 24 Z" fill="#161616"/>
+    </svg>WER</span>
+    <span class="row3">★&nbsp;&nbsp;FITNESS FACTORY&nbsp;&nbsp;★</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#programs">Programs</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="booking.html" class="nav-book">Book Now</a>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-bg-img"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <span class="hero-tag">St. Louis Personal Trainer &amp; Pro Bodybuilder</span>
+    <h1 class="hero-h">
+      BODY.<br/>
+      MIND.<br/>
+      <span class="outline">WILL.</span>
+    </h1>
+    <p class="hero-sub">Transforming bodies and mindsets through mental determination and elite personal training. Led by Pro Bodybuilder William Anderson.</p>
+    <div class="hero-btns">
+      <a href="booking.html" class="btn-w">Book a Session</a>
+      <a href="#programs" class="btn-ol">View Programs</a>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat"><div class="v">1:1</div><div class="l">Private<br/>Training</div></div>
+    <div class="stat"><div class="v">PRO</div><div class="l">Body-<br/>builder</div></div>
+    <div class="stat"><div class="v">4</div><div class="l">Program<br/>Types</div></div>
+    <div class="stat"><div class="v">STL</div><div class="l">314-964-<br/>7114</div></div>
+  </div>
+</section>
+
+<!-- ══ MARQUEE ══ -->
+<div class="marquee">
+  <div class="marquee-t">
+    <span class="mi">Private Training <span class="ms">★</span></span>
+    <span class="mi">Semi-Private <span class="ms">★</span></span>
+    <span class="mi">Group Fitness <span class="ms">★</span></span>
+    <span class="mi">Online Coaching <span class="ms">★</span></span>
+    <span class="mi">Meal Plans <span class="ms">★</span></span>
+    <span class="mi">Competition Prep <span class="ms">★</span></span>
+    <span class="mi">Body Transformation <span class="ms">★</span></span>
+    <span class="mi">WillPower Fitness Factory <span class="ms">★</span></span>
+    <span class="mi">Private Training <span class="ms">★</span></span>
+    <span class="mi">Semi-Private <span class="ms">★</span></span>
+    <span class="mi">Group Fitness <span class="ms">★</span></span>
+    <span class="mi">Online Coaching <span class="ms">★</span></span>
+    <span class="mi">Meal Plans <span class="ms">★</span></span>
+    <span class="mi">Competition Prep <span class="ms">★</span></span>
+    <span class="mi">Body Transformation <span class="ms">★</span></span>
+    <span class="mi">WillPower Fitness Factory <span class="ms">★</span></span>
+  </div>
+</div>
+
+<!-- ══ PROGRAMS ══ -->
+<section class="sec sec-bg" id="programs">
+  <div class="wrap">
+    <div class="sec-hd r">
+      <span class="ey">Training Programs</span>
+      <h2 class="sec-title">CHOOSE YOUR PATH</h2>
+      <p class="sec-sub">Every program is built around your goals, your schedule, and your willpower.</p>
+    </div>
+    <div class="prog-grid">
+      <a href="booking.html" class="prog-card r">
+        <div class="prog-n">01</div>
+        <div class="prog-name">Private Training</div>
+        <p class="prog-desc">1-on-1 sessions built entirely around you. Full attention, max accountability, and programming tailored to your exact goals and abilities.</p>
+        <span class="prog-cta">Book This →</span>
+      </a>
+      <a href="booking.html" class="prog-card r">
+        <div class="prog-n">02</div>
+        <div class="prog-name">Semi-Private</div>
+        <p class="prog-desc">2–4 clients per session. The energy of a crew with the precision of individual coaching — personalized attention in a tight-knit group.</p>
+        <span class="prog-cta">Book This →</span>
+      </a>
+      <a href="booking.html" class="prog-card r">
+        <div class="prog-n">03</div>
+        <div class="prog-name">Group Sessions</div>
+        <p class="prog-desc">High-energy group fitness for all levels. A social, motivating environment built to keep you consistent and committed to your transformation.</p>
+        <span class="prog-cta">Book This →</span>
+      </a>
+      <a href="booking.html" class="prog-card r">
+        <div class="prog-n">04</div>
+        <div class="prog-name">Online Training</div>
+        <p class="prog-desc">Access structured programming through the training app. Train on your schedule with William's full coaching system in your corner.</p>
+        <span class="prog-cta">Get Started →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ BIO ══ -->
+<section class="sec" id="about">
+  <div class="wrap">
+    <div class="bio-grid">
+
+      <!-- Photo mosaic -->
+      <div class="photo-mosaic r">
+        <!-- Main: competition stage shot -->
+        <div class="p-main">
+          <img src="/mnt/user-data/uploads/IMG_2541.png" alt="William Anderson competing — St. Louis Natural Classic" loading="lazy"/>
+          <div class="competition-badge">
+            <div class="cb-top">2nd Place Overall</div>
+            <div class="cb-bot">WNBF Garden City Natural · Augusta, GA</div>
+          </div>
+        </div>
+        <!-- Sub 1: on stage posing -->
+        <div class="p-sub">
+          <img src="/mnt/user-data/uploads/IMG_2540.png" alt="William Anderson on stage" loading="lazy"/>
+        </div>
+        <!-- Sub 2: at WNBF banner -->
+        <div class="p-sub">
+          <img src="/mnt/user-data/uploads/IMG_2539.png" alt="William Anderson at WNBF competition" loading="lazy"/>
+        </div>
+      </div>
+
+      <!-- Bio copy -->
+      <div class="r">
+        <span class="ey">Your Trainer</span>
+        <h2 class="bio-name">WILLIAM<br/>ANDERSON</h2>
+        <p class="bio-title">Owner · Personal Trainer · WNBF Pro Bodybuilder</p>
+
+        <!-- Flex Facility callout -->
+        <div class="flex-callout">
+          <div class="fc-logo">🏋️</div>
+          <div class="fc-text">
+            <div class="fc-name">The Flex Facility</div>
+            <div class="fc-sub">Resident Trainer · St. Louis, MO</div>
+          </div>
+        </div>
+
+        <p class="bio-text">William Anderson is a WNBF Pro Bodybuilder and certified personal trainer based in St. Louis. He built Will Power Fitness Factory on one belief: every client already carries the willpower to transform — they just need the right system and someone who won't let them quit.</p>
+        <p class="bio-text">Whether you're chasing fat loss, serious muscle, competition prep, or just want to move and feel better — William builds the program around your life, not the other way around.</p>
+        <div class="creds">
+          <span class="cred">Certified Personal Trainer</span>
+          <span class="cred">WNBF Pro Bodybuilder</span>
+          <span class="cred">Meal Planning</span>
+          <span class="cred">Competition Prep</span>
+          <span class="cred">Online Coaching</span>
+        </div>
+        <a href="booking.html" class="btn-w">Train With William →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SMS ══ -->
+<div class="sms-band">
+  <div class="wrap">
+    <div class="sms-inner r">
+      <div>
+        <p class="sms-pre">Free Consultation</p>
+        <h3 class="sms-h">GET SESSION INFO SENT TO YOUR PHONE</h3>
+        <p class="sms-p">Drop your number — we'll text you pricing, availability, and next steps instantly.</p>
+      </div>
+      <div>
+        <div class="sms-form">
+          <input class="sms-input" type="tel" placeholder="(314) 000-0000" id="smsInput"/>
+          <button class="sms-btn" onclick="doSMS()">Text Me →</button>
+        </div>
+        <p class="sms-note">By submitting you agree to receive SMS from Will Power Fitness Factory. Reply STOP to opt out anytime.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<section class="sec sec-bg" id="results">
+  <div class="wrap">
+    <div class="sec-hd r">
+      <span class="ey">Client Results &amp; Competition Record</span>
+      <h2 class="sec-title">REAL TRANSFORMATIONS</h2>
+    </div>
+    <div class="transform-grid">
+
+      <!-- Competition photo card -->
+      <div class="comp-card r">
+        <img class="comp-img" src="/mnt/user-data/uploads/IMG_2541.png" alt="William Anderson — St. Louis Natural Classic Champion" loading="lazy"/>
+        <div class="comp-overlay">
+          <div class="comp-title">ST. LOUIS NATURAL CLASSIC</div>
+          <div class="comp-sub">Overall Champion · WNBF Pro</div>
+        </div>
+      </div>
+
+      <!-- Testimonial 1 -->
+      <div class="testi-card r">
+        <span class="q">"</span>
+        <p class="testi-text">William doesn't just train your body — he trains your mindset. Down 28 lbs and stronger than I've ever been. Best investment I've made in myself.</p>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-name">Marcus T.</div>
+        <div class="testi-role">Private Training Client</div>
+      </div>
+
+      <!-- Testimonial 2 -->
+      <div class="testi-card r">
+        <span class="q">"</span>
+        <p class="testi-text">Semi-private is the sweet spot. You get the personal attention but there's energy in the room. Seven months straight — first time in my life I've been this consistent.</p>
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-name">Deja M.</div>
+        <div class="testi-role">Semi-Private Client</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══ BOOK CTA ══ -->
+<section class="cta-band" id="contact">
+  <span class="ey r">The Flex Facility · St. Louis, MO · 314-964-7114</span>
+  <h2 class="r">READY TO TRAIN?</h2>
+  <p class="r">Stop waiting on yourself. Book your first session with William and start the transformation.</p>
+  <a href="booking.html" class="btn-blk r">Book Your Session →</a>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a href="#" class="wpff-logo footer-logo" aria-label="Will Power Fitness Factory">
+          <span class="row1">WILL</span>
+          <span class="row2">P<svg class="kb" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 16 Q8 4 16 4 Q24 4 24 16" stroke="#f2f2f2" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="26" rx="14" ry="11" fill="#f2f2f2"/><path d="M19 18 L11 26 L15.5 26 L13 34 L21 24 L16.5 24 Z" fill="#161616"/></svg>WER</span>
+          <span class="row3">★&nbsp;&nbsp;FITNESS FACTORY&nbsp;&nbsp;★</span>
+        </a>
+        <p class="footer-tagline">Empowering individuals to transform through mental determination and physical training. St. Louis, MO.</p>
+        <div class="social-row">
+          <a class="soc" href="https://www.tiktok.com/@hulq314" target="_blank" rel="noopener">TT</a>
+          <a class="soc" href="https://www.facebook.com/profile.php?id=61553920083204" target="_blank" rel="noopener">FB</a>
+          <a class="soc" href="https://instagram.com/willpowerfitnessfactory" target="_blank" rel="noopener">IG</a>
+        </div>
+      </div>
+      <div class="fc-col">
+        <h4>Programs</h4>
+        <ul>
+          <li><a href="booking.html">Private Training</a></li>
+          <li><a href="booking.html">Semi-Private</a></li>
+          <li><a href="booking.html">Group Sessions</a></li>
+          <li><a href="booking.html">Online Training</a></li>
+          <li><a href="#">Meal Plans</a></li>
+          <li><a href="#">Apparel</a></li>
+        </ul>
+      </div>
+      <div class="fc-col">
+        <h4>Contact</h4>
+        <ul>
+          <li>📍 The Flex Facility, St. Louis</li>
+          <li><a href="tel:3149647114">314-964-7114</a></li>
+          <li style="line-height:1.4;margin-top:4px;"><a href="mailto:willpowerfitnessfactory@gmail.com">willpowerfitnessfactory<br/>@gmail.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bot">
+      <p>© 2026 Will Power Fitness Factory · William Anderson · All rights reserved.</p>
+      <p>Powered by <a href="https://goelev8.ai" target="_blank">GoElev8.ai</a></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const els = document.querySelectorAll('.r');
+  const ob = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) { setTimeout(() => e.target.classList.add('in'), i * 75); ob.unobserve(e.target); }
+    });
+  }, { threshold: 0.08 });
+  els.forEach(el => ob.observe(el));
+
+  // SMS demo
+  function doSMS() {
+    const inp = document.getElementById('smsInput');
+    if (inp.value.trim().length > 6) {
+      inp.value = '';
+      inp.placeholder = '✓ Text on the way!';
+      setTimeout(() => inp.placeholder = '(314) 000-0000', 3000);
+    }
+  }
+</script>
+</body>
+</html>
