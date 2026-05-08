@@ -88,7 +88,8 @@
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
     }
-    .nav-logo { --logo-sz: 22px; }
+    .nav-logo { display: inline-flex; align-items: center; }
+    .nav-logo img { display: block; height: 38px; width: auto; }
     .nav-links { display: flex; align-items: center; gap: 1.5rem; list-style: none; }
     .nav-links a { font-family: 'Barlow Condensed', sans-serif; font-weight: 500; font-size: 0.8rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--silver); text-decoration: none; transition: color 0.2s; }
     .nav-links a:hover { color: var(--white); }
@@ -117,7 +118,7 @@
     /* Background: William on stage — competition photo */
     .hero-bg-img {
       position: absolute; inset: 0;
-      background-image: url('/mnt/user-data/uploads/IMG_2543.png');
+      background-image: url('5X0A1947.jpg');
       background-size: cover;
       background-position: center top;
       filter: grayscale(40%) brightness(0.55) contrast(1.1);
@@ -404,7 +405,8 @@
     footer { background: #070707; border-top: 1px solid var(--border); }
     .footer-grid { display: grid; grid-template-columns: 1fr; gap: 32px; padding: 52px 0 40px; }
     @media(min-width:700px){ .footer-grid { grid-template-columns: 2fr 1fr 1fr; gap: 48px; } }
-    .footer-logo { --logo-sz: 20px; }
+    .footer-logo { display: inline-flex; align-items: center; }
+    .footer-logo img { display: block; height: 32px; width: auto; }
     .footer-tagline { font-family:'Barlow',sans-serif; font-weight:300; font-size:0.85rem; color:var(--silver); line-height:1.65; margin-top:12px; max-width:30ch; }
     .social-row { display:flex; gap:8px; margin-top:18px; }
     .soc { width:34px; height:34px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.62rem; letter-spacing:0.06em; color:var(--silver); text-decoration:none; transition:border-color 0.2s,color 0.2s; }
@@ -438,17 +440,8 @@
 
 <!-- ══ NAV ══ -->
 <nav>
-  <a href="#" class="wpff-logo nav-logo" aria-label="Will Power Fitness Factory">
-    <span class="row1">WILL</span>
-    <span class="row2">P<svg class="kb" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <!-- handle -->
-      <path d="M8 16 Q8 4 16 4 Q24 4 24 16" stroke="#f2f2f2" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-      <!-- bell body -->
-      <ellipse cx="16" cy="26" rx="14" ry="11" fill="#f2f2f2"/>
-      <!-- lightning bolt cutout -->
-      <path d="M19 18 L11 26 L15.5 26 L13 34 L21 24 L16.5 24 Z" fill="#161616"/>
-    </svg>WER</span>
-    <span class="row3">★&nbsp;&nbsp;FITNESS FACTORY&nbsp;&nbsp;★</span>
+  <a href="#" class="nav-logo" aria-label="Will Power Fitness Factory">
+    <img src="wpff-logo-white.png" alt="Will Power Fitness Factory"/>
   </a>
   <ul class="nav-links">
     <li><a href="#programs">Programs</a></li>
@@ -553,7 +546,7 @@
       <div class="photo-mosaic r">
         <!-- Main: competition stage shot -->
         <div class="p-main">
-          <img src="/mnt/user-data/uploads/IMG_2541.png" alt="William Anderson competing — St. Louis Natural Classic" loading="lazy"/>
+          <img src="5X0A2268-3.jpg" alt="William Anderson — competition pose" loading="lazy"/>
           <div class="competition-badge">
             <div class="cb-top">2nd Place Overall</div>
             <div class="cb-bot">WNBF Garden City Natural · Augusta, GA</div>
@@ -561,11 +554,11 @@
         </div>
         <!-- Sub 1: on stage posing -->
         <div class="p-sub">
-          <img src="/mnt/user-data/uploads/IMG_2540.png" alt="William Anderson on stage" loading="lazy"/>
+          <img src="NPDM9207.jpg" alt="William Anderson training" loading="lazy"/>
         </div>
         <!-- Sub 2: at WNBF banner -->
         <div class="p-sub">
-          <img src="/mnt/user-data/uploads/IMG_2539.png" alt="William Anderson at WNBF competition" loading="lazy"/>
+          <img src="NPDM9075.jpg" alt="William Anderson with WillPower clients" loading="lazy"/>
         </div>
       </div>
 
@@ -630,7 +623,7 @@
 
       <!-- Competition photo card -->
       <div class="comp-card r">
-        <img class="comp-img" src="/mnt/user-data/uploads/IMG_2541.png" alt="William Anderson — St. Louis Natural Classic Champion" loading="lazy"/>
+        <img class="comp-img" src="5X0A1947.jpg" alt="William Anderson — competition champion" loading="lazy"/>
         <div class="comp-overlay">
           <div class="comp-title">ST. LOUIS NATURAL CLASSIC</div>
           <div class="comp-sub">Overall Champion · WNBF Pro</div>
@@ -672,10 +665,8 @@
   <div class="wrap">
     <div class="footer-grid">
       <div>
-        <a href="#" class="wpff-logo footer-logo" aria-label="Will Power Fitness Factory">
-          <span class="row1">WILL</span>
-          <span class="row2">P<svg class="kb" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 16 Q8 4 16 4 Q24 4 24 16" stroke="#f2f2f2" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="26" rx="14" ry="11" fill="#f2f2f2"/><path d="M19 18 L11 26 L15.5 26 L13 34 L21 24 L16.5 24 Z" fill="#161616"/></svg>WER</span>
-          <span class="row3">★&nbsp;&nbsp;FITNESS FACTORY&nbsp;&nbsp;★</span>
+        <a href="#" class="footer-logo" aria-label="Will Power Fitness Factory">
+          <img src="wpff-logo-white.png" alt="Will Power Fitness Factory"/>
         </a>
         <p class="footer-tagline">Empowering individuals to transform through mental determination and physical training. St. Louis, MO.</p>
         <div class="social-row">
