@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #0a0a0a;
+    color: #f2f2f2;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; line-height: 0.95; }
+}
+
+@layer components {
+  .btn-gold { @apply inline-block bg-gold text-black font-condensed font-bold uppercase text-sm tracking-widest px-7 py-3.5 transition-opacity hover:opacity-90; }
+  .btn-white { @apply inline-block bg-white text-black font-condensed font-bold uppercase text-sm tracking-widest px-7 py-3.5 transition-opacity hover:opacity-90; }
+  .btn-outline { @apply inline-block border border-white/30 text-light font-condensed font-medium uppercase text-sm tracking-widest px-7 py-3.5 transition-colors hover:border-white hover:text-white; }
+  .eyebrow { @apply font-condensed font-medium uppercase text-[0.65rem] tracking-ultra text-silver; }
+  .field { @apply w-full bg-card border border-border text-white font-body px-4 py-3 outline-none focus:border-gold transition-colors; }
+  .field-label { @apply block text-[0.65rem] uppercase tracking-ultra text-silver mb-1.5 font-condensed font-medium; }
+  .panel { @apply border border-border bg-card p-6; }
+}
