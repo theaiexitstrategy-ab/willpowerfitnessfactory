@@ -1,4 +1,5 @@
 import Logo from './Logo';
+import { BRAND } from '@/lib/brand';
 
 export default function Footer() {
   return (
@@ -7,13 +8,12 @@ export default function Footer() {
         <div className="flex items-center gap-3">
           <Logo height={24} />
           <p className="font-body text-xs text-silver">
-            © {new Date().getFullYear()} Will Power Fitness Factory · William Anderson
+            © {new Date().getFullYear()} {BRAND.shortName}. All rights reserved.
           </p>
         </div>
         <p className="font-body text-xs text-silver">
-          Powered by{' '}
-          <a href="https://goelev8.ai" target="_blank" rel="noopener" className="hover:text-white transition-colors">
-            GoElev8.ai
+          <a href={BRAND.marketingUrl} target="_blank" rel="noopener" className="hover:text-white transition-colors">
+            {BRAND.marketingUrl.replace(/^https?:\/\//, '')}
           </a>
         </p>
       </div>

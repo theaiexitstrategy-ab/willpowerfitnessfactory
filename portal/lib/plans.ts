@@ -8,7 +8,7 @@ export type PlanFeature = {
   productLimit: number;
   storeLimit: number;
   platformFeeBps: number; // basis points, so 1500 = 15.00%
-  removesWpffBranding: boolean;
+  removesPlatformBranding: boolean;
   whiteLabel: boolean;
   customDomain: boolean;
   perOrderEmails: boolean;
@@ -25,7 +25,7 @@ export const PLANS: Record<PlanTier, PlanFeature> = {
     productLimit: 5,
     storeLimit: 1,
     platformFeeBps: 1500,
-    removesWpffBranding: false,
+    removesPlatformBranding: false,
     whiteLabel: false,
     customDomain: false,
     perOrderEmails: false,
@@ -33,7 +33,7 @@ export const PLANS: Record<PlanTier, PlanFeature> = {
     features: [
       '1 store',
       'Up to 5 products',
-      'WillPower FF branding on storefront',
+      'Powered-by credit on storefront',
       '15% platform fee per order',
     ],
   },
@@ -45,7 +45,7 @@ export const PLANS: Record<PlanTier, PlanFeature> = {
     productLimit: Number.POSITIVE_INFINITY,
     storeLimit: 1,
     platformFeeBps: 800,
-    removesWpffBranding: true,
+    removesPlatformBranding: true,
     whiteLabel: false,
     customDomain: false,
     perOrderEmails: true,
@@ -53,7 +53,7 @@ export const PLANS: Record<PlanTier, PlanFeature> = {
     features: [
       '1 store',
       'Unlimited products',
-      'Custom brand colors + logo (no WPFF branding)',
+      'Custom brand colors + logo (no platform branding)',
       '8% platform fee per order',
       'Email notifications per order',
       'Analytics dashboard',
@@ -67,7 +67,7 @@ export const PLANS: Record<PlanTier, PlanFeature> = {
     productLimit: Number.POSITIVE_INFINITY,
     storeLimit: 3,
     platformFeeBps: 400,
-    removesWpffBranding: true,
+    removesPlatformBranding: true,
     whiteLabel: true,
     customDomain: true,
     perOrderEmails: true,
@@ -75,7 +75,7 @@ export const PLANS: Record<PlanTier, PlanFeature> = {
     features: [
       'Up to 3 stores',
       'Unlimited products',
-      'Full white label (no WPFF branding anywhere)',
+      'Full white label (no platform branding anywhere)',
       '4% platform fee per order',
       'Priority support',
       'Custom domain support',

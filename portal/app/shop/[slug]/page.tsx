@@ -3,6 +3,7 @@ import { supabaseService } from '@/lib/supabase/server';
 import type { Client, Product } from '@/lib/types';
 import StorefrontGrid from '@/components/storefront/StorefrontGrid';
 import { PLANS } from '@/lib/plans';
+import { BRAND } from '@/lib/brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,12 +90,12 @@ export default async function StorefrontPage({ params }: { params: { slug: strin
           <p className="text-silver mt-2 text-[11px]">
             Powered by{' '}
             <a
-              href="https://willpowerfitnessfactory.com"
+              href={BRAND.marketingUrl}
               target="_blank"
               rel="noopener"
               className="hover:text-white transition-colors"
             >
-              WillPower Fitness Factory
+              {BRAND.shortName}
             </a>
           </p>
         )}

@@ -2,9 +2,10 @@ import { redirect } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
 import OnboardingWizard from '@/components/portal/OnboardingWizard';
 import Logo from '@/components/Logo';
+import { BRAND } from '@/lib/brand';
 import type { Client } from '@/lib/types';
 
-export const metadata = { title: 'Set up your store | WillPower Merch' };
+export const metadata = { title: `Set up your store | ${BRAND.name}` };
 export const dynamic = 'force-dynamic';
 
 export default async function OnboardingPage() {

@@ -5,7 +5,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images-api.printify.com' },
       { protocol: 'https', hostname: 'cdn.printify.com' },
       { protocol: 'https', hostname: 'res.cloudinary.com' },
-      { protocol: 'https', hostname: 'www.willpowerfitnessfactory.com' },
+      { protocol: 'https', hostname: 'goelev8.ai' },
+      { protocol: 'https', hostname: 'www.goelev8.ai' },
     ],
   },
 };

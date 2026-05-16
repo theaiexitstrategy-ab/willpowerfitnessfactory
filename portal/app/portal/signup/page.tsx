@@ -1,9 +1,10 @@
 import PublicNav from '@/components/PublicNav';
 import SignupForm from '@/components/portal/SignupForm';
 import { PLANS } from '@/lib/plans';
+import { BRAND } from '@/lib/brand';
 import type { PlanTier } from '@/lib/types';
 
-export const metadata = { title: 'Sign up | WillPower Merch' };
+export const metadata = { title: `Sign up | ${BRAND.name}` };
 
 export default function SignupPage({ searchParams }: { searchParams: { plan?: string } }) {
   const requestedPlan: PlanTier =

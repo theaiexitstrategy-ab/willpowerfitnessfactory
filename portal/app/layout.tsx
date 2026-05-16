@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { BRAND } from '@/lib/brand';
 
 export const metadata: Metadata = {
-  title: 'Will Power Fitness Factory | Merch Platform',
-  description:
-    'White-label merch platform for fitness brands, gyms, and trainers. Print-on-demand. Auto-fulfilled. Powered by WillPower Fitness Factory.',
+  title: `${BRAND.name} | Merch Platform for Fitness Brands`,
+  description: BRAND.tagline,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

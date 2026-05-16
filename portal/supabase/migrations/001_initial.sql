@@ -1,5 +1,5 @@
 -- ============================================================
--- WPFF Merch Platform — initial schema
+-- GoElev8 Merch Platform — initial schema
 -- Apply via: Supabase dashboard → SQL Editor → paste & run.
 -- ============================================================
 

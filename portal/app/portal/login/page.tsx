@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import PublicNav from '@/components/PublicNav';
 import LoginForm from '@/components/portal/LoginForm';
+import { BRAND } from '@/lib/brand';
 
-export const metadata = { title: 'Log in | WillPower Merch' };
+export const metadata = { title: `Log in | ${BRAND.name}` };
 
 export default function LoginPage() {
   return (

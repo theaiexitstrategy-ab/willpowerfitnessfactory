@@ -10,6 +10,7 @@ import {
 import { sendOrderNotification } from '@/lib/resend';
 import { PLANS, platformFeeCents } from '@/lib/plans';
 import { getTemplate } from '@/lib/product-templates';
+import { BRAND } from '@/lib/brand';
 import type { Client, OrderItem, Product, ProductTemplateKey } from '@/lib/types';
 
 export const runtime = 'nodejs';
@@ -156,7 +157,7 @@ async function onCheckoutCompleted(session: Stripe.Checkout.Session) {
         const [firstName, ...rest] = (customerName || 'Customer').split(' ');
         const created = await createPrintifyOrder({
           externalId: order?.id || session.id,
-          label: `WPFF-${c.business_name.slice(0, 10)}-${(order?.id || session.id).slice(-6)}`,
+          label: `${BRAND.orderLabelPrefix}-${c.business_name.slice(0, 10)}-${(order?.id || session.id).slice(-6)}`,
           lineItems: validLines,
           address: {
             first_name: firstName || 'Customer',

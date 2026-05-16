@@ -1,6 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server';
 import type { Client } from '@/lib/types';
 import StripeConnectCard from '@/components/portal/StripeConnectCard';
+import { BRAND } from '@/lib/brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +31,8 @@ export default async function SettingsPage() {
               Send your domain DNS team a <code className="font-mono text-light">CNAME</code> record
               pointing your subdomain at <code className="font-mono text-gold">cname.vercel-dns.com</code>.
               Then email us the domain at{' '}
-              <a href="mailto:hello@willpowerfitnessfactory.com" className="text-gold underline">
-                hello@willpowerfitnessfactory.com
+              <a href={`mailto:${BRAND.supportEmail}`} className="text-gold underline">
+                {BRAND.supportEmail}
               </a>{' '}
               and we'll attach it within 24 hours.
             </>

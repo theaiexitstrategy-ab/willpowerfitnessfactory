@@ -1,3 +1,5 @@
+import { BRAND } from './brand';
+
 const BASE = 'https://api.printify.com/v1';
 
 function authHeaders() {
@@ -6,7 +8,7 @@ function authHeaders() {
   return {
     Authorization: `Bearer ${key}`,
     'Content-Type': 'application/json',
-    'User-Agent': 'WPFFPortal/1.0',
+    'User-Agent': `${BRAND.shortName}Portal/1.0`,
   };
 }
 
@@ -36,9 +38,9 @@ export async function getPrintifyProduct(productId: string): Promise<{
 /**
  * Submit a Printify order for production.
  *
- * Note: in the shared-shop multi-tenant model, every order goes to the WPFF
- * Printify account. We tag with client_id in the external_id so the operator
- * can trace orders back to the client.
+ * Note: in the shared-shop multi-tenant model, every order goes to the
+ * platform-owned Printify account. We tag with client_id in the external_id
+ * so the operator can trace orders back to the client.
  */
 export async function createPrintifyOrder(params: {
   externalId: string;
@@ -62,7 +64,7 @@ export async function createPrintifyOrder(params: {
     headers: authHeaders(),
     body: JSON.stringify({
       external_id: params.externalId,
-      label: params.label || `WPFF-${params.externalId.slice(-8)}`,
+      label: params.label || `${BRAND.orderLabelPrefix}-${params.externalId.slice(-8)}`,
       line_items: params.lineItems,
       shipping_method: 1,
       send_shipping_notification: true,
