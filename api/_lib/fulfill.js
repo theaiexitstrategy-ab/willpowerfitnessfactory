@@ -181,6 +181,23 @@ async function syncOrderToPortal({ pi, items, shippingInfo, orderNumber, printif
     return;
   }
 
+  // Recover the fee breakdown stamped into PI metadata by /api/checkout
+  // so the portal records what platform + Stripe took on this order.
+  // Falls back to deriving subtotal/shipping from line items + PI total
+  // for any legacy PI created before the fee fields landed.
+  const subtotalFromItems = items.reduce(
+    (sum, i) => sum + Math.round((i.p || 0) * 100) * i.q, 0
+  );
+  const meta = pi.metadata || {};
+  const subtotalCents = Number.isFinite(+meta.subtotal_cents)
+    ? +meta.subtotal_cents : subtotalFromItems;
+  const shippingCents = Number.isFinite(+meta.shipping_cents)
+    ? +meta.shipping_cents : Math.max(0, (pi.amount || 0) - subtotalFromItems);
+  const platformFeeCents = Number.isFinite(+meta.platform_fee_cents)
+    ? +meta.platform_fee_cents : 0;
+  const stripeFeeCents = Number.isFinite(+meta.stripe_fee_cents)
+    ? +meta.stripe_fee_cents : 0;
+
   const payload = {
     customer_name: shippingInfo.name || '',
     customer_email: shippingInfo.email || pi.receipt_email || '',
@@ -203,11 +220,13 @@ async function syncOrderToPortal({ pi, items, shippingInfo, orderNumber, printif
       quantity: i.q,
       price_cents: Math.round((i.p || 0) * 100),
     })),
-    subtotal_cents: items.reduce((sum, i) => sum + Math.round((i.p || 0) * 100) * i.q, 0),
-    shipping_cents: Math.max(0, (pi.amount || 0) - items.reduce((sum, i) => sum + Math.round((i.p || 0) * 100) * i.q, 0)),
-    total_cents: pi.amount,
-    stripe_payment_id: pi.id,
-    printify_order_id: printifyOrderId || undefined,
+    subtotal_cents:     subtotalCents,
+    shipping_cents:     shippingCents,
+    platform_fee_cents: platformFeeCents,
+    stripe_fee_cents:   stripeFeeCents,
+    total_cents:        pi.amount,
+    stripe_payment_id:  pi.id,
+    printify_order_id:  printifyOrderId || undefined,
     external_order_number: orderNumber,
   };
 
