@@ -38,6 +38,31 @@ const FLEX_FACILITY = {
 const TENANT_SLUG = process.env.NEXT_PUBLIC_FLEX_FACILITY_SLUG_WPFF || 'willpower-fitness';
 const PORTAL_URL  = (process.env.PORTAL_SYNC_URL || 'https://portal.goelev8.ai').replace(/\/$/, '');
 
+// Fetch the live product price map from the portal. When Will updates
+// a price (or adds a new product) in the portal Merch tab, the
+// checkout endpoint validates against the new value without a
+// redeploy. Falls back to the hardcoded PRICES on any portal outage
+// so checkout never breaks on a portal hiccup.
+async function fetchPortalPrices() {
+  try {
+    const r = await fetch(`${PORTAL_URL}/api/external/products?slug=${TENANT_SLUG}`, {
+      headers: { 'Cache-Control': 'no-cache' }
+    });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const map = {};
+    for (const p of (data.products || [])) {
+      if (p.key && Number.isFinite(p.price_cents)) {
+        map[p.key] = { unit: p.price_cents, name: p.name };
+      }
+    }
+    return Object.keys(map).length ? map : null;
+  } catch (err) {
+    console.warn('[checkout] portal price fetch failed (using hardcoded):', err.message);
+    return null;
+  }
+}
+
 // Fetch the platform fee + Stripe pass-through quote from the portal.
 // On any network/HTTP failure we fall back to a zero-fee total — the
 // customer still gets charged exactly the listed subtotal + shipping
@@ -101,10 +126,20 @@ module.exports = async (req, res) => {
     // Compute subtotal from the server-side price map so a tampered
     // client request can't get a $5 hoodie. The client's `price` field
     // is informational only.
+    //
+    // Portal-managed prices take priority; the hardcoded PRICES map
+    // is the fallback when the portal is unreachable. This is what
+    // lets Will update prices + add new products from the portal
+    // Merch tab without redeploying the storefront.
+    const portalPriceMap = await fetchPortalPrices();
+    function unitFor(productId) {
+      if (portalPriceMap && portalPriceMap[productId]) return portalPriceMap[productId].unit;
+      return PRICES[productId];
+    }
     let subtotalCents = 0;
     const safeItems = [];
     for (const line of items) {
-      const unit = PRICES[line.productId];
+      const unit = unitFor(line.productId);
       if (!unit) return res.status(400).json({ error: `Unknown product: ${line.productId}` });
       const qty = Math.max(1, Number(line.quantity) || 1);
       subtotalCents += unit * qty;
