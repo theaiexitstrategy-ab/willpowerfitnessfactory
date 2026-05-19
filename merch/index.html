@@ -338,6 +338,28 @@
     .btn-add:hover { opacity: 0.9; }
     .btn-add:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    /* PICKUP NOTICE — surfaces the in-person pickup requirement
+       wherever the customer is about to commit (modal, cart, checkout). */
+    .pickup-notice {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px dashed var(--gold);
+      background: rgba(201, 168, 76, 0.06);
+      color: var(--light);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.66rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.5;
+    }
+    .pickup-notice strong {
+      display: block;
+      color: var(--gold);
+      letter-spacing: 0.24em;
+      margin-bottom: 3px;
+    }
+
     /* ════════════════════════════════
        SLIDE-OUT CART
     ════════════════════════════════ */
@@ -717,6 +739,11 @@
       <div class="opts" id="modalSizes"></div>
 
       <button class="btn-add" id="modalAdd">Add to Cart</button>
+      <div class="pickup-notice">
+        <strong>📍 Pickup Only</strong>
+        All orders picked up at The Flex Facility<br/>
+        4132 Shoreline Dr · Earth City, MO 63045
+      </div>
     </div>
   </div>
 </div>
@@ -749,7 +776,7 @@
 ═════════════════════════════════════════════════════════════════ -->
 <script>
   // -------- PRODUCT CATALOG -----------------------------------------
-  // image0/image2 = white/black Tee · image1/image3 = white/black Tank.
+  // white-tee/black-tee = Tee colorways · image1/image3 = white/black Tank.
   // Hoodie + Snapback are surfaced as "Coming soon" until real product
   // photos are committed.
   const PRODUCTS = [
@@ -762,9 +789,9 @@
       // The color picker swaps the displayed image. The customer
       // sees exactly what color they're getting.
       colors: [
-        { name: 'White', hex: '#f2f2f2', image: '/image0 (1).png', plate: 'light' },
-        { name: 'Black', hex: '#0b0b0b', image: '/image2.png',     plate: 'dark'  },
-        { name: 'Red',   hex: '#7a1f1f', image: '/image2.png',     plate: 'dark'  }
+        { name: 'White', hex: '#f2f2f2', image: '/white-tee.png', plate: 'light' },
+        { name: 'Black', hex: '#0b0b0b', image: '/black-tee.png',     plate: 'dark'  },
+        { name: 'Red',   hex: '#7a1f1f', image: '/black-tee.png',     plate: 'dark'  }
       ],
       available: true
     },
@@ -811,6 +838,16 @@
   const FREE_SHIPPING_CENTS = 7500;
   const FLAT_SHIPPING_CENTS = 695;
   const STORAGE_KEY = 'wpff_merch_cart_v1';
+
+  // Surfaced under each purchase-decision button so customers know
+  // orders are picked up in person at The Flex Facility, not shipped.
+  const PICKUP_NOTICE_HTML = `
+    <div class="pickup-notice">
+      <strong>📍 Pickup Only</strong>
+      All orders picked up at The Flex Facility<br/>
+      4132 Shoreline Dr · Earth City, MO 63045
+    </div>
+  `;
 
   // -------- CART STATE ----------------------------------------------
   // A "line" represents one product+color+size combo. Quantity is a
@@ -1043,6 +1080,7 @@
             <input class="field" name="zip"   placeholder="ZIP" required />
           </div>
           <button type="submit" class="btn-checkout">Continue to Payment →</button>
+          ${PICKUP_NOTICE_HTML}
           <button type="button" class="btn-back" id="backToCart">← Back to cart</button>
         </form>
       `;
@@ -1063,6 +1101,7 @@
           <div id="payError" class="err" style="display:none"></div>
           <div id="stripeMount"></div>
           <button class="btn-checkout" id="payBtn">Pay $${(totalCents/100).toFixed(2)}</button>
+          ${PICKUP_NOTICE_HTML}
           <button type="button" class="btn-back" id="backToShipping">← Back to shipping</button>
           <p class="pay-note">🔒 Secured by Stripe</p>
         </div>
@@ -1126,6 +1165,7 @@
     foot.innerHTML = `
       <div class="sub"><span>Subtotal</span><strong>$${(sub/100).toFixed(2)}</strong></div>
       <button class="btn-checkout" id="startCheckout">Checkout →</button>
+      ${PICKUP_NOTICE_HTML}
     `;
     document.getElementById('startCheckout').addEventListener('click', () => {
       if (cart.length === 0) return;
