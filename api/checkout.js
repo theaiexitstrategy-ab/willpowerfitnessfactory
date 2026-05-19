@@ -24,10 +24,19 @@ const PRICES = {
   snapback: 2999,
 };
 
-const FREE_SHIPPING_CENTS = 7500;
-const FLAT_SHIPPING_CENTS = 695;
-const TENANT_SLUG         = process.env.NEXT_PUBLIC_FLEX_FACILITY_SLUG_WPFF || 'willpower-fitness';
-const PORTAL_URL          = (process.env.PORTAL_SYNC_URL || 'https://portal.goelev8.ai').replace(/\/$/, '');
+// All orders are picked up in person at The Flex Facility — no shipping
+// is charged to the customer, and Printify ships everything to the gym
+// where William receives + holds the order for pickup.
+const FLEX_FACILITY = {
+  name:    'The Flex Facility (Pickup)',
+  address: '4132 Shoreline Dr',
+  city:    'Earth City',
+  state:   'MO',
+  zip:     '63045',
+  country: 'US',
+};
+const TENANT_SLUG = process.env.NEXT_PUBLIC_FLEX_FACILITY_SLUG_WPFF || 'willpower-fitness';
+const PORTAL_URL  = (process.env.PORTAL_SYNC_URL || 'https://portal.goelev8.ai').replace(/\/$/, '');
 
 // Fetch the platform fee + Stripe pass-through quote from the portal.
 // On any network/HTTP failure we fall back to a zero-fee total — the
@@ -61,16 +70,33 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { items, shippingInfo } = req.body || {};
+    const { items, shippingInfo: customerInfo } = req.body || {};
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Cart is empty.' });
     }
-    if (!shippingInfo || !shippingInfo.email || !shippingInfo.address1) {
-      return res.status(400).json({ error: 'Shipping info is incomplete.' });
+    if (!customerInfo || !customerInfo.name || !customerInfo.email || !customerInfo.phone) {
+      return res.status(400).json({ error: 'Name, email, and phone are required for pickup.' });
     }
     if (!process.env.STRIPE_SECRET_KEY) {
       return res.status(500).json({ error: 'Stripe is not configured on the server.' });
     }
+
+    // Overlay the Flex Facility address onto the customer's contact info
+    // so downstream consumers (Stripe shipping_to, Printify ship-to, and
+    // the portal sync) all see "ship to Flex Facility, recipient is the
+    // customer who's picking up". Customer name + email + phone are
+    // preserved for receipts and pickup coordination.
+    const shippingInfo = {
+      name:     customerInfo.name,
+      email:    customerInfo.email,
+      phone:    customerInfo.phone,
+      address1: FLEX_FACILITY.address,
+      address2: '',
+      city:     FLEX_FACILITY.city,
+      state:    FLEX_FACILITY.state,
+      zip:      FLEX_FACILITY.zip,
+      country:  FLEX_FACILITY.country,
+    };
 
     // Compute subtotal from the server-side price map so a tampered
     // client request can't get a $5 hoodie. The client's `price` field
@@ -92,11 +118,15 @@ module.exports = async (req, res) => {
       });
     }
 
-    const shipping = subtotalCents >= FREE_SHIPPING_CENTS ? 0 : FLAT_SHIPPING_CENTS;
+    // Pickup-only: customer is never charged for shipping. WPFF/Flex
+    // absorbs the Printify-to-gym shipping cost (or it's already priced
+    // into product margins). Quote still passes shipping_cents=0 so the
+    // portal's fee math doesn't get confused.
+    const shipping = 0;
 
     // Quote the GoElev8 platform fee + Stripe pass-through from the
     // portal. If anything goes wrong, fall back to charging exactly
-    // subtotal + shipping (no platform fee on this transaction).
+    // the subtotal (no platform fee on this transaction).
     const feeQuote = await quotePlatformFees(subtotalCents, shipping);
     const platformFeeCents = feeQuote ? feeQuote.platform_fee_cents : 0;
     const stripeFeeCents   = feeQuote ? feeQuote.stripe_fee_cents   : 0;
