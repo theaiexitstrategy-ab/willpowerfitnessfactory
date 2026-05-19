@@ -152,12 +152,77 @@ async function fulfillOrder(paymentIntentId) {
     },
   });
 
+  // Mirror the order into the GoElev8 portal dashboard. Best-effort:
+  // sync failures must not break the customer experience or affect
+  // Printify shipping. We log and move on.
+  await syncOrderToPortal({ pi, items, shippingInfo, orderNumber, printifyOrderId }).catch(err => {
+    console.warn('[fulfill] portal sync failed (non-fatal)', err);
+  });
+
   return {
     orderNumber,
     printifyOrderId,
     alreadyFulfilled: false,
     skippedItems,
   };
+}
+
+// Push a copy of this order into the portal's reporting database via
+// /api/external/orders. The portal looks us up by PORTAL_API_KEY and
+// writes the order under our tenant. Idempotent on stripe_payment_id
+// so a retry (or the webhook backup path firing after /api/orders)
+// won't double-write.
+async function syncOrderToPortal({ pi, items, shippingInfo, orderNumber, printifyOrderId }) {
+  const baseUrl = (process.env.PORTAL_SYNC_URL || '').replace(/\/$/, '');
+  const apiKey = process.env.PORTAL_API_KEY;
+  if (!baseUrl || !apiKey) {
+    // No portal configured — skip silently. Common during early
+    // local dev before the portal is deployed.
+    return;
+  }
+
+  const payload = {
+    customer_name: shippingInfo.name || '',
+    customer_email: shippingInfo.email || pi.receipt_email || '',
+    shipping: {
+      name: shippingInfo.name,
+      address1: shippingInfo.address1,
+      address2: shippingInfo.address2 || '',
+      city: shippingInfo.city,
+      state: shippingInfo.state,
+      zip: shippingInfo.zip,
+      country: shippingInfo.country || 'US',
+    },
+    // Translate our internal cart line shape (id, n, c, s, q, p) into
+    // the portal's snake_case schema.
+    items: items.map(i => ({
+      product_id: i.id,
+      name: i.n,
+      color: i.c,
+      size: i.s,
+      quantity: i.q,
+      price_cents: Math.round((i.p || 0) * 100),
+    })),
+    subtotal_cents: items.reduce((sum, i) => sum + Math.round((i.p || 0) * 100) * i.q, 0),
+    shipping_cents: Math.max(0, (pi.amount || 0) - items.reduce((sum, i) => sum + Math.round((i.p || 0) * 100) * i.q, 0)),
+    total_cents: pi.amount,
+    stripe_payment_id: pi.id,
+    printify_order_id: printifyOrderId || undefined,
+    external_order_number: orderNumber,
+  };
+
+  const res = await fetch(`${baseUrl}/api/external/orders`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Portal sync ${res.status}: ${text.slice(0, 200)}`);
+  }
 }
 
 // Print-on-demand products in Printify have multiple "variants" (one
