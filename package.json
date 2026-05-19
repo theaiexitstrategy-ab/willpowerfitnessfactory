@@ -1,0 +1,12 @@
+{
+  "name": "willpowerfitnessfactory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static marketing site + booking + merch storefront for Will Power Fitness Factory. Vercel-deployed. The serverless functions in api/ power the /merch checkout flow.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "stripe": "^17.2.1"
+  }
+}
