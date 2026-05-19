@@ -797,7 +797,9 @@
 ═════════════════════════════════════════════════════════════════ -->
 <script>
   // -------- PRODUCT CATALOG -----------------------------------------
-  // white-tee/black-tee = Tee colorways · image1/image3 = white/black Tank.
+  // Tee white = wppf-tshirt.png (sic — typo in committed filename) ·
+  // Tee black = black-tee.png · Tank white = wpff-tanktop.png ·
+  // Tank black = image3.png.
   // Hoodie + Snapback are surfaced as "Coming soon" until real product
   // photos are committed.
   const PRODUCTS = [
@@ -810,7 +812,7 @@
       // The color picker swaps the displayed image. The customer
       // sees exactly what color they're getting.
       colors: [
-        { name: 'White', hex: '#f2f2f2', image: '/white-tee.png', plate: 'light' },
+        { name: 'White', hex: '#f2f2f2', image: '/wppf-tshirt.png', plate: 'light' },
         { name: 'Black', hex: '#0b0b0b', image: '/black-tee.png',     plate: 'dark'  },
         { name: 'Red',   hex: '#7a1f1f', image: '/black-tee.png',     plate: 'dark'  }
       ],
@@ -823,7 +825,7 @@
       description: 'Cut for movement. Train in style.',
       sizes: ['S', 'M', 'L', 'XL', '2XL'],
       colors: [
-        { name: 'White', hex: '#f2f2f2', image: '/image1.png', plate: 'light' },
+        { name: 'White', hex: '#f2f2f2', image: '/wpff-tanktop.png', plate: 'light' },
         { name: 'Black', hex: '#0b0b0b', image: '/image3.png', plate: 'dark'  },
         { name: 'Red',   hex: '#7a1f1f', image: '/image3.png', plate: 'dark'  }
       ],
@@ -1337,9 +1339,89 @@
     }
   }
 
+  // -------- PORTAL PRODUCT SYNC ------------------------------------
+  // After initial paint with the hardcoded PRODUCTS list, fetch
+  // whatever Will set in the GoElev8 portal so name/price/description/
+  // availability/image stay in sync without redeploying this page.
+  // Variant info (sizes, colors) stays here because the portal schema
+  // doesn't model per-product variants yet — additions from the
+  // portal that don't match a hardcoded id get a generic single-
+  // variant card with the uploaded image.
+  const PORTAL_URL = 'https://portal.goelev8.ai';
+  const PORTAL_SLUG = 'willpower-fitness';
+
+  async function loadPortalProducts() {
+    let portalProducts;
+    try {
+      const r = await fetch(`${PORTAL_URL}/api/external/products?slug=${PORTAL_SLUG}`, { cache: 'no-store' });
+      if (!r.ok) return;
+      const data = await r.json();
+      portalProducts = data.products || [];
+    } catch (err) {
+      // Portal unreachable — keep the hardcoded values. The storefront
+      // never breaks on a portal outage.
+      console.warn('[merch] portal sync skipped:', err.message);
+      return;
+    }
+    if (!portalProducts.length) return;
+
+    // Override matching hardcoded entries with portal values.
+    const portalByKey = {};
+    for (const pp of portalProducts) portalByKey[pp.key] = pp;
+
+    for (const local of PRODUCTS) {
+      const pp = portalByKey[local.id];
+      if (!pp) continue;
+      local.name        = pp.name || local.name;
+      local.price       = (pp.price_cents || 0) / 100;
+      local.description = pp.description || local.description;
+      local.available   = pp.image_url ? true : local.available;  // portal can flip Coming Soon on once a photo is set
+      if (pp.image_url && local.colors && local.colors[0]) {
+        // Replace the first color's image with the portal-uploaded
+        // photo so the grid + modal use the latest asset.
+        local.colors[0].image = pp.image_url;
+      }
+      delete portalByKey[local.id];  // mark as consumed
+    }
+
+    // Anything still in portalByKey is a new product the operator
+    // added that doesn't exist in this hardcoded list. Render it
+    // with a generic single-variant card.
+    for (const pp of Object.values(portalByKey)) {
+      PRODUCTS.push({
+        id:          pp.key,
+        name:        pp.name,
+        price:       (pp.price_cents || 0) / 100,
+        description: pp.description || '',
+        // Sensible defaults — operator can request real variants later.
+        sizes:  ['S', 'M', 'L', 'XL', '2XL'],
+        colors: [{
+          name:  'Default',
+          hex:   '#1a1a1a',
+          image: pp.image_url || '/wpff-tanktop.png',
+          plate: 'dark'
+        }],
+        available: !!pp.image_url
+      });
+    }
+
+    // Sort by the portal's sort_order so operator reordering takes
+    // effect on the storefront grid too.
+    PRODUCTS.sort((a, b) => {
+      const sa = portalProducts.find(p => p.key === a.id)?.sort_order ?? 99;
+      const sb = portalProducts.find(p => p.key === b.id)?.sort_order ?? 99;
+      return sa - sb;
+    });
+
+    renderGrid();
+  }
+
   // -------- INIT ---------------------------------------------------
   renderGrid();
   renderHeader();
+  // Fire-and-forget: the page is interactive immediately with hardcoded
+  // data, then re-renders once the portal responds (usually <300ms).
+  loadPortalProducts();
 </script>
 
 </body>
