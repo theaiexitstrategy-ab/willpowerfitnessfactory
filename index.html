@@ -30,6 +30,7 @@
       --silver:  #808080;
       --light:   #b8b8b8;
       --white:   #f2f2f2;
+      --fire:    #FF6B00;
     }
     html { scroll-behavior: smooth; }
     body { background: var(--black); color: var(--white); font-family: 'Barlow Condensed', sans-serif; font-weight: 300; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
@@ -438,6 +439,103 @@
     .r.in { opacity:1; transform:translateY(0); }
 
     /* ════════════════════════════════
+       LEAD CAPTURE BAND  (sits between the white BOOK CTA and the footer
+       as a soft close — gathers contact info from visitors who aren't
+       ready to book yet so a coach can follow up within 24 hours)
+    ════════════════════════════════ */
+    .lead-band {
+      background: var(--char);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .lead-band::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,107,0,0.10), transparent 70%);
+      pointer-events: none;
+    }
+    .lead-inner {
+      max-width: 720px; margin: 0 auto; text-align: center; position: relative;
+    }
+    .lead-band .ey {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
+      font-size: 0.65rem; letter-spacing: 0.42em; text-transform: uppercase;
+      color: var(--fire);
+    }
+    .lead-band h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.4rem, 7vw, 3.6rem);
+      letter-spacing: 0.04em; line-height: 1; margin: 10px 0 12px;
+    }
+    .lead-band p.lead-sub {
+      font-family: 'Barlow', sans-serif; font-weight: 300;
+      font-size: 0.98rem; color: var(--light);
+      max-width: 44ch; margin: 0 auto 30px; line-height: 1.6;
+    }
+    .lead-form {
+      display: grid; grid-template-columns: 1fr; gap: 10px;
+      max-width: 520px; margin: 0 auto;
+      text-align: left;
+    }
+    .lead-form .row2 { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 560px) {
+      .lead-form .row2 { grid-template-columns: 1fr 1fr; }
+    }
+    .lead-input, .lead-select {
+      width: 100%;
+      background: var(--dark); border: 1px solid var(--border);
+      color: var(--white);
+      font-family: 'Barlow', sans-serif; font-size: 0.95rem;
+      padding: 13px 14px; outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .lead-input::placeholder { color: var(--silver); }
+    .lead-input:focus, .lead-select:focus { border-color: var(--fire); }
+    .lead-select {
+      /* Custom dropdown arrow so it doesn't fall back to OS default
+         which clashes with the dark theme */
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none'><path d='M1 1l5 5 5-5' stroke='%23808080' stroke-width='1.5'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 12px;
+      padding-right: 36px;
+    }
+    .btn-fire {
+      width: 100%; background: var(--fire); color: var(--black);
+      border: none;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.95rem; letter-spacing: 0.26em; text-transform: uppercase;
+      padding: 15px;
+      transition: opacity 0.2s, transform 0.2s;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .btn-fire:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-fire:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .lead-note {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.66rem; letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--silver); margin-top: 14px;
+    }
+    .lead-success, .lead-error {
+      max-width: 520px; margin: 18px auto 0; padding: 14px 16px;
+      font-family: 'Barlow', sans-serif; font-size: 0.92rem;
+      line-height: 1.5; text-align: center;
+    }
+    .lead-success {
+      background: rgba(255,107,0,0.08); border: 1px solid var(--fire);
+      color: var(--white);
+    }
+    .lead-error {
+      background: rgba(239,68,68,0.08); border: 1px solid #ef4444aa;
+      color: #ff9b9b;
+    }
+
+    /* ════════════════════════════════
        NAV HIDE ON MOBILE
     ════════════════════════════════ */
     @media(max-width:680px){
@@ -672,6 +770,41 @@
   <a href="https://book.willpowerfitnessfactory.com/" class="btn-blk r">Book Your Session →</a>
 </section>
 
+<!-- ══ LEAD CAPTURE ══ -->
+<section class="lead-band" id="free-week">
+  <div class="lead-inner">
+    <span class="ey r">Free Week Pass</span>
+    <h2 class="r">CLAIM YOUR FREE<br/>WEEK PASS.</h2>
+    <p class="lead-sub r">Drop your info below and a coach will reach out within 24 hours.</p>
+
+    <form id="leadForm" class="lead-form r" novalidate>
+      <div class="row2">
+        <input class="lead-input" name="first_name" placeholder="First Name" required autocomplete="given-name"/>
+        <input class="lead-input" name="last_name"  placeholder="Last Name"  required autocomplete="family-name"/>
+      </div>
+      <input class="lead-input" name="email" type="email" placeholder="Email Address" required autocomplete="email"/>
+      <input class="lead-input" name="phone" type="tel"   placeholder="Phone Number"  required autocomplete="tel"/>
+      <select class="lead-select" name="goal" aria-label="What's your goal?">
+        <option value="">What's your goal? (optional)</option>
+        <option>Lose Weight</option>
+        <option>Build Muscle</option>
+        <option>Improve Endurance</option>
+        <option>General Fitness</option>
+        <option>Other</option>
+      </select>
+      <button type="submit" class="btn-fire" id="leadSubmit">Let's Go 🔥</button>
+    </form>
+
+    <p class="lead-note r">No spam. No pressure. Just results.</p>
+
+    <!-- Outcome panels; only one shows at a time -->
+    <div class="lead-success" id="leadSuccess" hidden>
+      You're in! Expect a call or text from a Will Power coach soon. 💪🏾
+    </div>
+    <div class="lead-error" id="leadError" hidden></div>
+  </div>
+</section>
+
 <!-- ══ FOOTER ══ -->
 <footer>
   <div class="wrap">
@@ -733,6 +866,55 @@
       setTimeout(() => inp.placeholder = '(314) 000-0000', 3000);
     }
   }
+
+  // ──────────────────────────────────────────────────────────────
+  // Lead capture form
+  // ──────────────────────────────────────────────────────────────
+  // POSTs to our own /api/lead serverless function, which forwards
+  // to the GoElev8 leads endpoint (env-configurable). Keeping the
+  // proxy lets us swap the upstream URL, add an API key server-side
+  // without exposing it to the browser, and avoid CORS surprises.
+  (function () {
+    const form = document.getElementById('leadForm');
+    if (!form) return;
+    const submitBtn  = document.getElementById('leadSubmit');
+    const successEl  = document.getElementById('leadSuccess');
+    const errorEl    = document.getElementById('leadError');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+
+      try {
+        const data = Object.fromEntries(new FormData(form).entries());
+        const res = await fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, gym: 'willpowerfitnessfactory', source: 'homepage' })
+        });
+        if (!res.ok) {
+          const out = await res.json().catch(() => ({}));
+          throw new Error(out.error || 'Something went wrong on our end.');
+        }
+        // Hide the form, show success, fire GA4 event.
+        form.hidden = true;
+        successEl.hidden = false;
+        successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof gtag === 'function') {
+          gtag('event', 'lead_capture', { gym: 'willpowerfitnessfactory' });
+        }
+      } catch (err) {
+        errorEl.textContent =
+          (err && err.message) || 'We couldn\'t submit your info right now. Please text 314-964-7114 and we\'ll get back to you.';
+        errorEl.hidden = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Let's Go 🔥";
+      }
+    });
+  })();
 </script>
 </body>
 </html>
