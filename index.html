@@ -454,6 +454,11 @@
     .sms-btn { background: var(--white); color: var(--black); border: none; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.76rem; letter-spacing: 0.24em; text-transform: uppercase; padding: 13px 20px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
     .sms-btn:hover { opacity: 0.88; }
     .sms-note { font-size: 0.65rem; color: var(--silver); line-height: 1.5; margin-top: 8px; max-width: 280px; }
+    .sms-status {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.74rem; letter-spacing: 0.18em; text-transform: uppercase;
+      margin-top: 10px; line-height: 1.4;
+    }
 
     /* ════════════════════════════════
        TRANSFORMATION
@@ -827,20 +832,24 @@
 </section>
 
 <!-- ══ SMS ══ -->
+<!-- Quick-text capture: phone-only path into the same /api/lead pipeline
+     as the hero form. Lower-friction alternative for visitors who don't
+     want to fill out the full form. -->
 <div class="sms-band">
   <div class="wrap">
     <div class="sms-inner r">
       <div>
         <p class="sms-pre">Free Consultation</p>
         <h3 class="sms-h">GET SESSION INFO SENT TO YOUR PHONE</h3>
-        <p class="sms-p">Drop your number — we'll text you pricing, availability, and next steps instantly.</p>
+        <p class="sms-p">Drop your number — a coach will text you pricing, availability, and next steps within 24 hours.</p>
       </div>
       <div>
-        <div class="sms-form">
-          <input class="sms-input" type="tel" placeholder="(314) 000-0000" id="smsInput"/>
-          <button class="sms-btn" onclick="doSMS()">Text Me →</button>
-        </div>
+        <form class="sms-form" id="smsForm" novalidate>
+          <input class="sms-input" type="tel" placeholder="(314) 000-0000" id="smsInput" name="phone" required autocomplete="tel"/>
+          <button type="submit" class="sms-btn" id="smsBtn">Text Me →</button>
+        </form>
         <p class="sms-note">By submitting you agree to receive SMS from Will Power Fitness Factory. Reply STOP to opt out anytime.</p>
+        <p class="sms-status" id="smsStatus" hidden></p>
       </div>
     </div>
   </div>
@@ -946,15 +955,67 @@
   }, { threshold: 0.08 });
   els.forEach(el => ob.observe(el));
 
-  // SMS demo
-  function doSMS() {
-    const inp = document.getElementById('smsInput');
-    if (inp.value.trim().length > 6) {
-      inp.value = '';
-      inp.placeholder = '✓ Text on the way!';
-      setTimeout(() => inp.placeholder = '(314) 000-0000', 3000);
-    }
-  }
+  // ──────────────────────────────────────────────────────────────
+  // Quick-text band ("Get session info sent to your phone")
+  // ──────────────────────────────────────────────────────────────
+  // Phone-only capture that funnels into the same /api/lead pipeline
+  // as the hero form, tagged with partial_capture:true so the operator
+  // knows to follow up for name + email.
+  (function () {
+    const form  = document.getElementById('smsForm');
+    if (!form) return;
+    const input = document.getElementById('smsInput');
+    const btn   = document.getElementById('smsBtn');
+    const status = document.getElementById('smsStatus');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const phone = String(input.value || '').trim();
+      // Loose check — keep friction low. Server validates too.
+      if (phone.replace(/\D/g, '').length < 10) {
+        status.hidden = false;
+        status.textContent = 'Please enter a valid phone number.';
+        status.style.color = '#ff9b9b';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      status.hidden = true;
+
+      try {
+        const res = await fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone,
+            partial_capture: true,
+            gym: 'willpowerfitnessfactory',
+            source: 'homepage_sms_band'
+          })
+        });
+        if (!res.ok) {
+          const out = await res.json().catch(() => ({}));
+          throw new Error(out.error || 'Something went wrong on our end.');
+        }
+        form.hidden = true;
+        status.hidden = false;
+        status.textContent = '✓ Got it — a coach will text you within 24 hours.';
+        status.style.color = 'var(--fire)';
+        if (typeof gtag === 'function') {
+          gtag('event', 'lead_capture', {
+            gym: 'willpowerfitnessfactory',
+            source: 'homepage_sms_band'
+          });
+        }
+      } catch (err) {
+        status.hidden = false;
+        status.textContent = (err && err.message) || 'Couldn\'t send right now. Please text 314-964-7114.';
+        status.style.color = '#ff9b9b';
+        btn.disabled = false;
+        btn.textContent = 'Text Me →';
+      }
+    });
+  })();
 
   // ──────────────────────────────────────────────────────────────
   // Lead capture form
