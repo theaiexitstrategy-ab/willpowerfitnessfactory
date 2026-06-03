@@ -650,10 +650,10 @@
     <!-- Lead capture (moved here from above the footer per the new design)
          Sits in a semi-transparent dark panel so the form is legible over
          the hero image without competing with the headline. -->
-    <aside class="hero-form-panel" id="free-week">
-      <span class="ey">Free Week Pass</span>
+    <aside class="hero-form-panel" id="free-session">
+      <span class="ey">One Free Session</span>
       <h3>CLAIM YOUR SPOT.</h3>
-      <p class="hp-sub">Drop your info and a coach will reach out within 24 hours.</p>
+      <p class="hp-sub">Drop your info to book your free first session with William at The Flex Facility.</p>
 
       <form id="leadForm" class="lead-form" novalidate>
         <div class="row2">
@@ -687,7 +687,7 @@
     <div class="stat"><div class="v">1:1</div><div class="l">Private<br/>Training</div></div>
     <div class="stat"><div class="v">PRO</div><div class="l">Body-<br/>builder</div></div>
     <div class="stat"><div class="v">4</div><div class="l">Program<br/>Types</div></div>
-    <div class="stat"><div class="v">STL</div><div class="l">314-964-<br/>7114</div></div>
+    <div class="stat"><div class="v">STL</div><div class="l">877-515-<br/>3539</div></div>
   </div>
 </section>
 
@@ -805,7 +805,7 @@
       <div class="r">
         <span class="ey">Your Trainer</span>
         <h2 class="bio-name">WILLIAM<br/>ANDERSON</h2>
-        <p class="bio-title">Owner · Personal Trainer · WNBF Pro Bodybuilder</p>
+        <p class="bio-title">Personal Trainer · WNBF Pro Bodybuilder · St. Louis</p>
 
         <!-- Flex Facility callout -->
         <div class="flex-callout">
@@ -897,7 +897,7 @@
 
 <!-- ══ BOOK CTA ══ -->
 <section class="cta-band" id="contact">
-  <span class="ey r">The Flex Facility · St. Louis, MO · 314-964-7114</span>
+  <span class="ey r">The Flex Facility · St. Louis, MO · 877-515-3539</span>
   <h2 class="r">READY TO TRAIN?</h2>
   <p class="r">Stop waiting on yourself. Book your first session with William and start the transformation.</p>
   <a href="https://book.willpowerfitnessfactory.com/" class="btn-blk r">Book Your Session →</a>
@@ -933,7 +933,7 @@
         <h4>Contact</h4>
         <ul>
           <li>📍 The Flex Facility, St. Louis</li>
-          <li><a href="tel:3149647114">314-964-7114</a></li>
+          <li><a href="tel:18775153539">877-515-3539</a></li>
           <li style="line-height:1.4;margin-top:4px;"><a href="mailto:willpowerfitnessfactory@gmail.com">willpowerfitnessfactory<br/>@gmail.com</a></li>
         </ul>
       </div>
@@ -999,7 +999,7 @@
         }
         form.hidden = true;
         status.hidden = false;
-        status.textContent = '✓ Got it — a coach will text you within 24 hours.';
+        status.textContent = '✓ Got it — redirecting you to book your free session…';
         status.style.color = 'var(--fire)';
         if (typeof gtag === 'function') {
           gtag('event', 'lead_capture', {
@@ -1007,9 +1007,14 @@
             source: 'homepage_sms_band'
           });
         }
+        // Send the visitor straight to the booking page so they can
+        // grab a time for their free first session.
+        setTimeout(() => {
+          window.location.href = 'https://book.willpowerfitnessfactory.com/';
+        }, 900);
       } catch (err) {
         status.hidden = false;
-        status.textContent = (err && err.message) || 'Couldn\'t send right now. Please text 314-964-7114.';
+        status.textContent = (err && err.message) || 'Couldn\'t send right now. Please text 877-515-3539.';
         status.style.color = '#ff9b9b';
         btn.disabled = false;
         btn.textContent = 'Text Me →';
@@ -1049,16 +1054,25 @@
           const out = await res.json().catch(() => ({}));
           throw new Error(out.error || 'Something went wrong on our end.');
         }
-        // Hide the form, show success, fire GA4 event.
+        // Hide the form, show a brief success state, fire GA4 event,
+        // then redirect to the booking page so the customer can pick
+        // a time for their free first session.
         form.hidden = true;
+        successEl.textContent = 'Got it! Redirecting you to book your free session…';
         successEl.hidden = false;
         successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         if (typeof gtag === 'function') {
           gtag('event', 'lead_capture', { gym: 'willpowerfitnessfactory' });
         }
+        // Short delay so the success message is visible before the
+        // browser navigates away. 900ms feels intentional without
+        // making the customer wait.
+        setTimeout(() => {
+          window.location.href = 'https://book.willpowerfitnessfactory.com/';
+        }, 900);
       } catch (err) {
         errorEl.textContent =
-          (err && err.message) || 'We couldn\'t submit your info right now. Please text 314-964-7114 and we\'ll get back to you.';
+          (err && err.message) || 'We couldn\'t submit your info right now. Please text 877-515-3539 and we\'ll get back to you.';
         errorEl.hidden = false;
         submitBtn.disabled = false;
         submitBtn.textContent = "Let's Go 🔥";

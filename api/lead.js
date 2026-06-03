@@ -1,7 +1,7 @@
 // POST /api/lead
 //
 // Browser-facing endpoint for the homepage lead capture (both the
-// hero "Free Week Pass" form and the SMS band quick-text capture).
+// hero "One Free Session" form and the SMS band quick-text capture).
 // Captures the lead via three fallback paths, in order:
 //
 //   1. Forward to LEAD_CAPTURE_URL (the upstream CRM/leads webhook)
@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     const body = req.body || {};
 
     // Two capture flavors come through this endpoint:
-    //   1. Full lead form (hero "Free Week Pass") — requires the
+    //   1. Full lead form (hero "One Free Session") — requires the
     //      name + email + phone quartet.
     //   2. Quick-text band (mid-page "Get session info sent to your
     //      phone") — only collects a phone number. These submit with
@@ -99,6 +99,66 @@ module.exports = async (req, res) => {
       }
     }
 
+    // ─── 2b. TWILIO CONFIRMATION SMS — send the customer an immediate
+    //         opt-in confirmation text with the booking link. Best-effort,
+    //         non-fatal: if Twilio isn't configured or the send fails,
+    //         the lead is still captured via the email + log paths and
+    //         the customer gets the auto-redirect to the booking page
+    //         from the browser. This is what makes Will's "Opt-in SMS"
+    //         actually happen.
+    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER) {
+      try {
+        const phoneDigits = String(payload.phone).replace(/\D/g, '');
+        const toE164 = phoneDigits.length === 10
+          ? `+1${phoneDigits}`
+          : phoneDigits.length === 11 && phoneDigits.startsWith('1')
+            ? `+${phoneDigits}`
+            : null;
+
+        if (toE164) {
+          const firstName = payload.first_name ? `, ${payload.first_name}` : '';
+          const smsBody = process.env.TWILIO_LEAD_TEMPLATE
+            ? process.env.TWILIO_LEAD_TEMPLATE
+                .replace('{first_name}', payload.first_name || '')
+                .replace('{booking_url}', 'https://book.willpowerfitnessfactory.com/')
+            : `Hey${firstName} — thanks for reaching out to Will Power Fitness Factory! ` +
+              `Book your free first session with William here: https://book.willpowerfitnessfactory.com/ ` +
+              `Reply STOP to opt out.`;
+
+          // Twilio's Messages.create REST endpoint via fetch — keeps us
+          // off the twilio npm package since this is the only Twilio
+          // call in the codebase.
+          const twilioRes = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: 'Basic ' + Buffer.from(
+                  `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
+                ).toString('base64'),
+              },
+              body: new URLSearchParams({
+                To: toE164,
+                From: process.env.TWILIO_FROM_NUMBER,
+                Body: smsBody,
+              }).toString(),
+            }
+          );
+          if (twilioRes.ok) {
+            console.log('[/api/lead] Twilio confirmation SMS sent to', toE164);
+          } else {
+            const text = await twilioRes.text().catch(() => '');
+            console.warn('[/api/lead] Twilio send non-2xx', twilioRes.status, text.slice(0, 200));
+          }
+        } else {
+          console.warn('[/api/lead] Twilio skipped — phone not normalizable to E.164:', payload.phone);
+        }
+      } catch (err) {
+        console.warn('[/api/lead] Twilio send threw (non-fatal)', err);
+      }
+    }
+
     // ─── 3. RESEND EMAIL FALLBACK — if a fallback address is configured
     //        and the upstream didn't catch the lead, email the operator.
     //        Uses the same Resend client the merch order confirmations
@@ -110,7 +170,7 @@ module.exports = async (req, res) => {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'leads@willpowerfitnessfactory.com';
 
-        const niceLabel = partial ? 'New phone-only lead (SMS band)' : 'New lead (Free Week Pass form)';
+        const niceLabel = partial ? 'New phone-only lead (SMS band)' : 'New lead (Free First Session form)';
         const lines = [
           `<p><strong>${niceLabel}</strong></p>`,
           `<p>Source: ${payload.source}</p>`,
