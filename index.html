@@ -150,6 +150,23 @@
     .hero-content {
       position: relative; z-index: 2;
       padding: 0 20px 36px;
+      /* Two-column layout on desktop — text on left, lead form on right.
+         Stacks on mobile so the form appears below the headline rather
+         than squeezing it. */
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      align-items: end;
+      max-width: 1160px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    @media (min-width: 900px) {
+      .hero-content {
+        grid-template-columns: 1.15fr 1fr;
+        gap: 48px;
+        padding-bottom: 56px;
+      }
     }
 
     .hero-tag {
@@ -162,7 +179,9 @@
 
     h1.hero-h {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(4.2rem, 18vw, 8rem);
+      /* Slightly more conservative max so the headline shares hero
+         real-estate with the lead form panel without crowding. */
+      font-size: clamp(3.6rem, 13vw, 6.5rem);
       line-height: 0.88;
       letter-spacing: 0.02em;
       color: var(--white);
@@ -177,6 +196,42 @@
       font-family: 'Barlow', sans-serif;
       font-weight: 300; font-size: 0.95rem; line-height: 1.7;
       color: var(--light); max-width: 38ch; margin-bottom: 24px;
+    }
+
+    /* Lead capture panel inside the hero — semi-transparent dark
+       container so the form reads cleanly over the image background. */
+    .hero-form-panel {
+      background: rgba(11,11,11,0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      padding: 24px 22px 22px;
+      max-width: 480px;
+      width: 100%;
+      justify-self: stretch;
+    }
+    @media (min-width: 900px) { .hero-form-panel { justify-self: end; padding: 28px 26px 24px; } }
+    .hero-form-panel .ey {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.64rem; letter-spacing: 0.42em; text-transform: uppercase;
+      color: var(--fire); margin-bottom: 6px;
+    }
+    .hero-form-panel h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 1.9rem);
+      letter-spacing: 0.04em; line-height: 1; margin-bottom: 6px;
+      color: var(--white);
+    }
+    .hero-form-panel .hp-sub {
+      font-family: 'Barlow', sans-serif; font-weight: 300;
+      font-size: 0.82rem; color: var(--light);
+      line-height: 1.55; margin-bottom: 16px;
+    }
+    .hero-form-panel .lead-note {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--silver); margin-top: 10px; text-align: center;
     }
 
     .hero-btns { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -219,6 +274,47 @@
     .mi { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--black); padding: 0 1.8rem; }
     .ms { color: #999; }
     @keyframes scroll { to { transform: translateX(-50%); } }
+
+    /* ════════════════════════════════
+       MISSION BAND  (sits between marquee and programs — surfaces the
+       mission + vision so visitors see the "why" before the "what")
+    ════════════════════════════════ */
+    .mission-band { background: var(--black); padding: 80px 20px; border-bottom: 1px solid var(--border); }
+    .mission-inner { max-width: 1160px; margin: 0 auto; }
+    .mission-grid {
+      display: grid; grid-template-columns: 1fr; gap: 48px;
+    }
+    @media (min-width: 820px) { .mission-grid { grid-template-columns: 1fr 1fr; gap: 64px; } }
+    .mission-block .ey {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.66rem; letter-spacing: 0.42em; text-transform: uppercase;
+      color: var(--fire); margin-bottom: 8px;
+    }
+    .mission-block h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+      letter-spacing: 0.04em; line-height: 1; margin-bottom: 16px;
+    }
+    .mission-block .underscore {
+      display: inline-block; height: 2px; width: 44px;
+      background: var(--fire); margin-bottom: 18px;
+    }
+    .mission-block p {
+      font-family: 'Barlow', sans-serif; font-weight: 300;
+      font-size: 1rem; line-height: 1.75; color: var(--light);
+    }
+    .mission-link {
+      margin-top: 40px; text-align: center;
+      padding-top: 28px; border-top: 1px solid var(--border);
+    }
+    .mission-link a {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.78rem; letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--fire); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .mission-link a:hover { color: var(--fire-hi, #FF8633); }
 
     /* ════════════════════════════════
        SECTION WRAPPER
@@ -439,42 +535,11 @@
     .r.in { opacity:1; transform:translateY(0); }
 
     /* ════════════════════════════════
-       LEAD CAPTURE BAND  (sits between the white BOOK CTA and the footer
-       as a soft close — gathers contact info from visitors who aren't
-       ready to book yet so a coach can follow up within 24 hours)
+       LEAD CAPTURE FORM  (now lives inside the hero panel — the section
+       wrapper styles that previously framed it have been removed; the
+       .lead-form / .lead-input / .lead-select / .btn-fire selectors are
+       still used by the form markup inside .hero-form-panel.)
     ════════════════════════════════ */
-    .lead-band {
-      background: var(--char);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      padding: 80px 20px;
-      position: relative;
-      overflow: hidden;
-    }
-    .lead-band::before {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,107,0,0.10), transparent 70%);
-      pointer-events: none;
-    }
-    .lead-inner {
-      max-width: 720px; margin: 0 auto; text-align: center; position: relative;
-    }
-    .lead-band .ey {
-      display: block;
-      font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
-      font-size: 0.65rem; letter-spacing: 0.42em; text-transform: uppercase;
-      color: var(--fire);
-    }
-    .lead-band h2 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(2.4rem, 7vw, 3.6rem);
-      letter-spacing: 0.04em; line-height: 1; margin: 10px 0 12px;
-    }
-    .lead-band p.lead-sub {
-      font-family: 'Barlow', sans-serif; font-weight: 300;
-      font-size: 0.98rem; color: var(--light);
-      max-width: 44ch; margin: 0 auto 30px; line-height: 1.6;
-    }
     .lead-form {
       display: grid; grid-template-columns: 1fr; gap: 10px;
       max-width: 520px; margin: 0 auto;
@@ -567,17 +632,50 @@
   <div class="hero-overlay"></div>
 
   <div class="hero-content">
-    <span class="hero-tag">St. Louis Personal Trainer &amp; Pro Bodybuilder</span>
-    <h1 class="hero-h">
-      BODY.<br/>
-      MIND.<br/>
-      <span class="outline">WILL.</span>
-    </h1>
-    <p class="hero-sub">Transforming bodies and mindsets through mental determination and elite personal training. Led by Pro Bodybuilder William Anderson.</p>
-    <div class="hero-btns">
-      <a href="https://book.willpowerfitnessfactory.com/" class="btn-w">Book a Session</a>
-      <a href="#programs" class="btn-ol">View Programs</a>
+    <div class="hero-text">
+      <span class="hero-tag">St. Louis Personal Trainer &amp; Pro Bodybuilder</span>
+      <h1 class="hero-h">
+        BODY.<br/>
+        MIND.<br/>
+        <span class="outline">WILL.</span>
+      </h1>
+      <p class="hero-sub">Transforming bodies and mindsets through mental determination and elite personal training. Led by Pro Bodybuilder William Anderson.</p>
     </div>
+
+    <!-- Lead capture (moved here from above the footer per the new design)
+         Sits in a semi-transparent dark panel so the form is legible over
+         the hero image without competing with the headline. -->
+    <aside class="hero-form-panel" id="free-week">
+      <span class="ey">Free Week Pass</span>
+      <h3>CLAIM YOUR SPOT.</h3>
+      <p class="hp-sub">Drop your info and a coach will reach out within 24 hours.</p>
+
+      <form id="leadForm" class="lead-form" novalidate>
+        <div class="row2">
+          <input class="lead-input" name="first_name" placeholder="First Name" required autocomplete="given-name"/>
+          <input class="lead-input" name="last_name"  placeholder="Last Name"  required autocomplete="family-name"/>
+        </div>
+        <input class="lead-input" name="email" type="email" placeholder="Email Address" required autocomplete="email"/>
+        <input class="lead-input" name="phone" type="tel"   placeholder="Phone Number"  required autocomplete="tel"/>
+        <select class="lead-select" name="goal" aria-label="What's your goal?">
+          <option value="">What's your goal? (optional)</option>
+          <option>Lose Weight</option>
+          <option>Build Muscle</option>
+          <option>Improve Endurance</option>
+          <option>General Fitness</option>
+          <option>Other</option>
+        </select>
+        <button type="submit" class="btn-fire" id="leadSubmit">Let's Go 🔥</button>
+      </form>
+
+      <p class="lead-note">No spam. No pressure. Just results.</p>
+
+      <!-- Outcome panels; only one shows at a time -->
+      <div class="lead-success" id="leadSuccess" hidden>
+        You're in! Expect a call or text from a Will Power coach soon. 💪🏾
+      </div>
+      <div class="lead-error" id="leadError" hidden></div>
+    </aside>
   </div>
 
   <div class="stat-strip">
@@ -609,6 +707,32 @@
     <span class="mi">WillPower Fitness Factory <span class="ms">★</span></span>
   </div>
 </div>
+
+<!-- ══ MISSION ══ -->
+<!-- Pulls the mission + vision statements from /mission so visitors see
+     the "why" before scrolling into the programs. Full values + promise
+     stay on the dedicated /mission page (linked at the bottom). -->
+<section class="mission-band">
+  <div class="mission-inner">
+    <div class="mission-grid">
+      <div class="mission-block r">
+        <span class="ey">Our Mission</span>
+        <h2>BUILD THE WILL.</h2>
+        <span class="underscore"></span>
+        <p>Empowering clients to transform their body and mind by building the habits, discipline, and willpower necessary for lasting success.</p>
+      </div>
+      <div class="mission-block r">
+        <span class="ey">Our Vision</span>
+        <h2>BUILD THE COMMUNITY.</h2>
+        <span class="underscore"></span>
+        <p>To create a community where individuals develop the confidence, discipline, and resilience needed to achieve their fitness goals and become the strongest version of themselves — physically, mentally, and personally.</p>
+      </div>
+    </div>
+    <div class="mission-link r">
+      <a href="/mission/">Read our values &amp; promise →</a>
+    </div>
+  </div>
+</section>
 
 <!-- ══ PROGRAMS ══ -->
 <section class="sec sec-bg" id="programs">
@@ -768,41 +892,6 @@
   <h2 class="r">READY TO TRAIN?</h2>
   <p class="r">Stop waiting on yourself. Book your first session with William and start the transformation.</p>
   <a href="https://book.willpowerfitnessfactory.com/" class="btn-blk r">Book Your Session →</a>
-</section>
-
-<!-- ══ LEAD CAPTURE ══ -->
-<section class="lead-band" id="free-week">
-  <div class="lead-inner">
-    <span class="ey r">Free Week Pass</span>
-    <h2 class="r">CLAIM YOUR FREE<br/>WEEK PASS.</h2>
-    <p class="lead-sub r">Drop your info below and a coach will reach out within 24 hours.</p>
-
-    <form id="leadForm" class="lead-form r" novalidate>
-      <div class="row2">
-        <input class="lead-input" name="first_name" placeholder="First Name" required autocomplete="given-name"/>
-        <input class="lead-input" name="last_name"  placeholder="Last Name"  required autocomplete="family-name"/>
-      </div>
-      <input class="lead-input" name="email" type="email" placeholder="Email Address" required autocomplete="email"/>
-      <input class="lead-input" name="phone" type="tel"   placeholder="Phone Number"  required autocomplete="tel"/>
-      <select class="lead-select" name="goal" aria-label="What's your goal?">
-        <option value="">What's your goal? (optional)</option>
-        <option>Lose Weight</option>
-        <option>Build Muscle</option>
-        <option>Improve Endurance</option>
-        <option>General Fitness</option>
-        <option>Other</option>
-      </select>
-      <button type="submit" class="btn-fire" id="leadSubmit">Let's Go 🔥</button>
-    </form>
-
-    <p class="lead-note r">No spam. No pressure. Just results.</p>
-
-    <!-- Outcome panels; only one shows at a time -->
-    <div class="lead-success" id="leadSuccess" hidden>
-      You're in! Expect a call or text from a Will Power coach soon. 💪🏾
-    </div>
-    <div class="lead-error" id="leadError" hidden></div>
-  </div>
 </section>
 
 <!-- ══ FOOTER ══ -->
