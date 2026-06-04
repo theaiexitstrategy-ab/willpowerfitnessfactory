@@ -68,8 +68,68 @@ module.exports = async (req, res) => {
     //        operator's de-facto "lead inbox" until upstream is wired)
     console.log('[/api/lead] LEAD CAPTURED', JSON.stringify(payload));
 
+    // ─── 1b. PORTAL EVENT INGEST — this is what makes the lead show up in
+    //        portal.goelev8.ai. Posts to /api/events?action=ingest with an
+    //        HMAC SHA-256 signature over the raw body. The portal resolves
+    //        the tenant by client_slug, writes a client_events row, and
+    //        also upserts the leads table so the Leads tab reflects it.
+    //
+    //        Env required (set on this Vercel project):
+    //          INGEST_WEBHOOK_SECRET  — same value as the portal project
+    //          PORTAL_INGEST_URL      — optional override, defaults to prod
+    const ingestSecret = (process.env.INGEST_WEBHOOK_SECRET || '').trim();
+    const ingestUrl    = (process.env.PORTAL_INGEST_URL || 'https://portal.goelev8.ai/api/events?action=ingest').trim();
+    if (ingestSecret) {
+      try {
+        const crypto = require('crypto');
+        const fullName = [payload.first_name, payload.last_name].filter(Boolean).join(' ') || null;
+        const portalBody = JSON.stringify({
+          client_slug:   'willpower-fitness',
+          source:        'willpowerfitnessfactory.com',
+          source_path:   payload.source || (partial ? 'sms-band' : 'homepage'),
+          event_type:    'lead',
+          external_id:   `wpff-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          contact_name:  fullName,
+          contact_email: payload.email,
+          contact_phone: payload.phone,
+          title:         partial ? 'Phone-only quick capture' : 'Free First Session form',
+          payload: {
+            first_name: payload.first_name,
+            last_name:  payload.last_name,
+            email:      payload.email,
+            phone:      payload.phone,
+            goal:       payload.goal,
+            partial_capture: partial,
+            funnel:     partial ? 'sms-band' : 'free-first-session'
+          },
+          occurred_at: payload.captured_at
+        });
+        const sig = crypto.createHmac('sha256', ingestSecret).update(portalBody).digest('hex');
+        const portalRes = await fetch(ingestUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-GoElev8-Signature': `sha256=${sig}`
+          },
+          body: portalBody
+        });
+        if (portalRes.ok) {
+          captured.portal = true;
+        } else {
+          const t = await portalRes.text().catch(() => '');
+          errors.push(`portal ingest ${portalRes.status}: ${t.slice(0, 200)}`);
+          console.warn('[/api/lead] portal ingest non-2xx', portalRes.status, t);
+        }
+      } catch (err) {
+        errors.push(`portal ingest threw: ${err.message}`);
+        console.warn('[/api/lead] portal ingest threw', err);
+      }
+    } else {
+      errors.push('portal ingest skipped: INGEST_WEBHOOK_SECRET not set');
+    }
+
     // Track what worked so the response can be transparent in logs.
-    const captured = { upstream: false, email: false };
+    const captured = { upstream: false, email: false, portal: false };
     const errors   = [];
     // Diagnostic block for the Twilio call. Always included in the
     // API response so it's inspectable from DevTools → Network when
@@ -259,7 +319,7 @@ module.exports = async (req, res) => {
     // If at least one persistent path worked, the lead is safe — return
     // success. Otherwise we still log so the data is in Vercel logs, but
     // surface a soft failure so the customer knows to text the gym.
-    if (captured.upstream || captured.email) {
+    if (captured.upstream || captured.email || captured.portal) {
       return res.status(200).json({ ok: true, captured, twilio });
     }
 
