@@ -316,6 +316,80 @@
     }
     .mission-link a:hover { color: var(--fire-hi, #FF8633); }
 
+    /* Mission band sub-header — used for "Core Values" + "Our Promise"
+       inline labels below the main Mission/Vision split. Smaller than
+       .sec-hd because we're already nested inside the mission band. */
+    .mission-subhd {
+      text-align: center; margin: 56px 0 28px;
+    }
+    .mission-subhd .ey {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.66rem; letter-spacing: 0.42em; text-transform: uppercase;
+      color: var(--fire);
+    }
+    .mission-subhd h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.7rem, 4.5vw, 2.3rem);
+      letter-spacing: 0.04em; line-height: 1;
+      margin-top: 8px;
+    }
+
+    /* Compact 8-up values grid. 2-col phablet → 4-col desktop so 8
+       values lay out as 4×2 instead of the dedicated page's 3-col
+       (which would leave 2 stragglers on the bottom row). */
+    .values-mini {
+      display: grid; gap: 14px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 520px) { .values-mini { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 900px) { .values-mini { grid-template-columns: repeat(4, 1fr); } }
+
+    .value-mini {
+      background: var(--char);
+      border: 1px solid var(--border);
+      padding: 22px 20px;
+      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+    .value-mini:hover {
+      transform: translateY(-3px);
+      border-color: var(--fire);
+      background: var(--dark, #202020);
+    }
+    .value-mini .emoji {
+      font-size: 1.8rem; line-height: 1; margin-bottom: 12px;
+      display: inline-block;
+      filter: drop-shadow(0 0 6px rgba(255,107,0,0.22));
+    }
+    .value-mini h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem; letter-spacing: 0.05em;
+      color: var(--white); margin-bottom: 8px;
+    }
+    .value-mini h4 .num {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
+      font-size: 0.58rem; letter-spacing: 0.32em;
+      color: var(--fire); margin-right: 8px;
+      vertical-align: middle; position: relative; top: -2px;
+    }
+    .value-mini p {
+      font-family: 'Barlow', sans-serif; font-weight: 300;
+      font-size: 0.88rem; line-height: 1.65;
+      color: var(--light);
+    }
+
+    /* Promise block — single centered paragraph in the mission band's
+       palette. Uses the fire underscore + Barlow Condensed body to read
+       as a closing-statement rather than another card. */
+    .promise-mini {
+      max-width: 760px; margin: 0 auto; text-align: center;
+      padding: 8px 0 0;
+    }
+    .promise-mini p {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 400;
+      font-size: clamp(1.05rem, 2.3vw, 1.3rem);
+      line-height: 1.6; color: var(--white);
+    }
+
     /* ════════════════════════════════
        SECTION WRAPPER
     ════════════════════════════════ */
@@ -714,9 +788,11 @@
 </div>
 
 <!-- ══ MISSION ══ -->
-<!-- Pulls the mission + vision statements from /mission so visitors see
-     the "why" before scrolling into the programs. Full values + promise
-     stay on the dedicated /mission page (linked at the bottom). -->
+<!-- Inline full mission: Mission + Vision intro, all 8 core values in
+     a compact 4-up grid, and the closing promise statement. The full
+     content from /mission lives here so visitors see Will's "why" in
+     one scroll without a click. The dedicated /mission page is kept
+     for menu/SEO and uses larger visual treatment. -->
 <section class="mission-band">
   <div class="mission-inner">
     <div class="mission-grid">
@@ -733,8 +809,66 @@
         <p>To create a community where individuals develop the confidence, discipline, and resilience needed to achieve their fitness goals and become the strongest version of themselves — physically, mentally, and personally.</p>
       </div>
     </div>
+
+    <div class="mission-subhd r">
+      <span class="ey">Core Values</span>
+      <h3>WHAT WE STAND FOR</h3>
+    </div>
+
+    <div class="values-mini">
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Faith">🙏🏾</span>
+        <h4><span class="num">01</span>FAITH</h4>
+        <p>Faith in the process, the journey, and a grounding in purpose, perseverance, and gratitude.</p>
+      </div>
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Discipline">💪🏾</span>
+        <h4><span class="num">02</span>DISCIPLINE</h4>
+        <p>Do what needs to be done — even when motivation is absent. The foundation of lasting results.</p>
+      </div>
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Consistency">📆</span>
+        <h4><span class="num">03</span>CONSISTENCY</h4>
+        <p>Small actions repeated over time. We commit to showing up, day after day.</p>
+      </div>
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Integrity">✊🏾</span>
+        <h4><span class="num">04</span>INTEGRITY</h4>
+        <p>Honesty, accountability, and professionalism in every interaction and decision.</p>
+      </div>
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Willpower">🔥</span>
+        <h4><span class="num">05</span>WILLPOWER</h4>
+        <p>Growth over comfort. Action over excuses. Commitment over convenience.</p>
+      </div>
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Resilience">🛡️</span>
+        <h4><span class="num">06</span>RESILIENCE</h4>
+        <p>Challenges and setbacks are opportunities to learn, adapt, and come back stronger.</p>
+      </div>
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Excellence">🏆</span>
+        <h4><span class="num">07</span>EXCELLENCE</h4>
+        <p>Improve every day — in training, coaching, service, and personal development.</p>
+      </div>
+      <div class="value-mini r">
+        <span class="emoji" role="img" aria-label="Community">🤝🏾</span>
+        <h4><span class="num">08</span>COMMUNITY</h4>
+        <p>An environment of encouragement, support, and accountability where everyone can succeed.</p>
+      </div>
+    </div>
+
+    <div class="mission-subhd r" style="margin-top:64px;">
+      <span class="ey">The Commitment</span>
+      <h3>OUR PROMISE TO YOU</h3>
+    </div>
+
+    <div class="promise-mini r">
+      <p>We're committed to helping you build more than just a better body. We help you develop the mindset, habits, discipline, and confidence to create lasting transformation — inside and outside the gym.</p>
+    </div>
+
     <div class="mission-link r">
-      <a href="/mission/">Read our values &amp; promise →</a>
+      <a href="/mission/">See the full mission page →</a>
     </div>
   </div>
 </section>
