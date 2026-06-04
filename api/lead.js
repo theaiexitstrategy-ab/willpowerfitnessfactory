@@ -71,6 +71,22 @@ module.exports = async (req, res) => {
     // Track what worked so the response can be transparent in logs.
     const captured = { upstream: false, email: false };
     const errors   = [];
+    // Diagnostic block for the Twilio call. Always included in the
+    // API response so it's inspectable from DevTools → Network when
+    // SMS isn't arriving. Holds the literal Twilio status code and
+    // error message rather than swallowing them into Vercel logs.
+    const twilio = {
+      attempted: false,
+      configured: false,
+      skipped_reason: null,   // 'config_missing' | 'phone_invalid' | null
+      sent_to: null,          // normalized E.164 destination
+      from_number: null,      // From number we used (helps debug TFV mismatch)
+      status_code: null,      // HTTP status from Twilio API
+      twilio_code: null,      // Twilio-specific numeric error code (e.g. 21610)
+      twilio_message: null,   // human-readable Twilio error
+      message_sid: null,      // SID of the sent message on success
+      threw: null,            // error message if fetch itself threw
+    };
 
     // ─── 2. UPSTREAM WEBHOOK (LEAD_CAPTURE_URL) — only attempt if the
     //        URL was explicitly configured. The previous default of
@@ -106,7 +122,22 @@ module.exports = async (req, res) => {
     //         the customer gets the auto-redirect to the booking page
     //         from the browser. This is what makes Will's "Opt-in SMS"
     //         actually happen.
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER) {
+    //
+    // Diagnostics from this block are surfaced in the JSON response so
+    // a 502/404/21610 from Twilio is visible in DevTools → Network →
+    // /api/lead → Response.twilio without needing to dig into Vercel
+    // function logs.
+    //
+    // Env vars are trimmed defensively — a trailing newline from copy-
+    // paste is the most common reason "the env vars are set" but the
+    // call still fails with a 401 (Twilio rejects the auth header).
+    const sid    = (process.env.TWILIO_ACCOUNT_SID || '').trim();
+    const token  = (process.env.TWILIO_AUTH_TOKEN  || '').trim();
+    const from   = (process.env.TWILIO_FROM_NUMBER || '').trim();
+    twilio.configured = !!(sid && token && from);
+
+    if (twilio.configured) {
+      twilio.from_number = from;
       try {
         const phoneDigits = String(payload.phone).replace(/\D/g, '');
         const toE164 = phoneDigits.length === 10
@@ -115,7 +146,13 @@ module.exports = async (req, res) => {
             ? `+${phoneDigits}`
             : null;
 
-        if (toE164) {
+        if (!toE164) {
+          twilio.skipped_reason = 'phone_invalid';
+          console.warn('[/api/lead] Twilio skipped — phone not normalizable to E.164:', payload.phone);
+        } else {
+          twilio.attempted = true;
+          twilio.sent_to = toE164;
+
           const firstName = payload.first_name ? `, ${payload.first_name}` : '';
           const smsBody = process.env.TWILIO_LEAD_TEMPLATE
             ? process.env.TWILIO_LEAD_TEMPLATE
@@ -129,34 +166,58 @@ module.exports = async (req, res) => {
           // off the twilio npm package since this is the only Twilio
           // call in the codebase.
           const twilioRes = await fetch(
-            `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`,
+            `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
             {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: 'Basic ' + Buffer.from(
-                  `${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`
-                ).toString('base64'),
+                Authorization: 'Basic ' + Buffer.from(`${sid}:${token}`).toString('base64'),
               },
               body: new URLSearchParams({
                 To: toE164,
-                From: process.env.TWILIO_FROM_NUMBER,
+                From: from,
                 Body: smsBody,
               }).toString(),
             }
           );
+
+          twilio.status_code = twilioRes.status;
+          // Twilio returns JSON on both success and error — error
+          // responses include { code, message, more_info } fields we
+          // can surface for diagnostics.
+          const bodyText = await twilioRes.text().catch(() => '');
+          let bodyJson = null;
+          try { bodyJson = JSON.parse(bodyText); } catch {}
+
           if (twilioRes.ok) {
-            console.log('[/api/lead] Twilio confirmation SMS sent to', toE164);
+            twilio.message_sid = bodyJson?.sid || null;
+            console.log('[/api/lead] Twilio SMS sent', { sid: twilio.message_sid, to: toE164 });
           } else {
-            const text = await twilioRes.text().catch(() => '');
-            console.warn('[/api/lead] Twilio send non-2xx', twilioRes.status, text.slice(0, 200));
+            twilio.twilio_code = bodyJson?.code || null;
+            twilio.twilio_message = bodyJson?.message || bodyText.slice(0, 240);
+            console.warn('[/api/lead] Twilio send non-2xx', {
+              status: twilioRes.status,
+              code: twilio.twilio_code,
+              message: twilio.twilio_message,
+            });
           }
-        } else {
-          console.warn('[/api/lead] Twilio skipped — phone not normalizable to E.164:', payload.phone);
         }
       } catch (err) {
+        twilio.threw = err && err.message ? err.message : String(err);
         console.warn('[/api/lead] Twilio send threw (non-fatal)', err);
       }
+    } else {
+      // Env vars missing or empty after trim. Record which one(s) so
+      // the user can see "configured: false" + "skipped_reason" in
+      // the response and know exactly what's missing in Vercel.
+      twilio.skipped_reason = 'config_missing';
+      twilio.from_number = from || null;
+      const missing = [
+        !sid    && 'TWILIO_ACCOUNT_SID',
+        !token  && 'TWILIO_AUTH_TOKEN',
+        !from   && 'TWILIO_FROM_NUMBER',
+      ].filter(Boolean);
+      twilio.threw = `missing env vars: ${missing.join(', ')}`;
     }
 
     // ─── 3. RESEND EMAIL FALLBACK — if a fallback address is configured
@@ -199,14 +260,14 @@ module.exports = async (req, res) => {
     // success. Otherwise we still log so the data is in Vercel logs, but
     // surface a soft failure so the customer knows to text the gym.
     if (captured.upstream || captured.email) {
-      return res.status(200).json({ ok: true, captured });
+      return res.status(200).json({ ok: true, captured, twilio });
     }
 
     // The console.log above means the lead is at least recoverable from
     // Vercel logs. We still return 200 so the customer experience isn't
     // broken — the operator will see this in logs and follow up.
     console.warn('[/api/lead] CAPTURED VIA LOG-ONLY (no upstream, no email fallback). Errors:', errors);
-    return res.status(200).json({ ok: true, captured: { logged_only: true } });
+    return res.status(200).json({ ok: true, captured: { logged_only: true }, twilio });
   } catch (err) {
     console.error('[/api/lead]', err);
     return res.status(500).json({ error: err.message || 'Server error' });
