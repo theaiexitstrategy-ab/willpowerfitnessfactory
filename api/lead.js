@@ -2,11 +2,15 @@
 //
 // Browser-facing endpoint for the homepage lead capture (both the
 // hero "One Free Session" form and the SMS band quick-text capture).
-// Captures the lead via three fallback paths, in order:
+// Captures the lead via three fallback paths:
 //
-//   1. Forward to LEAD_CAPTURE_URL (the upstream CRM/leads webhook)
-//   2. If that fails, email the lead to LEAD_FALLBACK_EMAIL via Resend
-//   3. ALWAYS log the lead to Vercel function logs as a last-resort
+//   1. Portal ingest — POST to portal.goelev8.ai/api/events?action=ingest
+//      with an HMAC SHA-256 signature (env: INGEST_WEBHOOK_SECRET).
+//      Lands in the multi-tenant portal's leads table and fires the
+//      portal's welcome SMS + nudge + push side effects.
+//   2. Resend email fallback — emails the lead to LEAD_FALLBACK_EMAIL
+//      if the portal ingest didn't capture (env: RESEND_API_KEY).
+//   3. ALWAYS log the lead to Vercel function logs as a last resort
 //      so it's at least recoverable from the operator's dashboard.
 //
 // The endpoint returns success to the customer if ANY of those paths
@@ -68,6 +72,28 @@ module.exports = async (req, res) => {
     //        operator's de-facto "lead inbox" until upstream is wired)
     console.log('[/api/lead] LEAD CAPTURED', JSON.stringify(payload));
 
+    // Track which capture paths succeeded and any non-fatal errors.
+    // Declared up here (not inline before each block) because every
+    // capture path below pushes into `errors` for the response diag.
+    const captured = { portal: false, email: false };
+    const errors   = [];
+    // Diagnostic block for the Twilio call. Always included in the
+    // API response so it's inspectable from DevTools → Network when
+    // SMS isn't arriving. Holds the literal Twilio status code and
+    // error message rather than swallowing them into Vercel logs.
+    const twilio = {
+      attempted: false,
+      configured: false,
+      skipped_reason: null,   // 'config_missing' | 'phone_invalid' | null
+      sent_to: null,          // normalized E.164 destination
+      from_number: null,      // From number we used (helps debug TFV mismatch)
+      status_code: null,      // HTTP status from Twilio API
+      twilio_code: null,      // Twilio-specific numeric error code (e.g. 21610)
+      twilio_message: null,   // human-readable Twilio error
+      message_sid: null,      // SID of the sent message on success
+      threw: null,            // error message if fetch itself threw
+    };
+
     // ─── 1b. PORTAL EVENT INGEST — this is what makes the lead show up in
     //        portal.goelev8.ai. Posts to /api/events?action=ingest with an
     //        HMAC SHA-256 signature over the raw body. The portal resolves
@@ -128,52 +154,6 @@ module.exports = async (req, res) => {
       errors.push('portal ingest skipped: INGEST_WEBHOOK_SECRET not set');
     }
 
-    // Track what worked so the response can be transparent in logs.
-    const captured = { upstream: false, email: false, portal: false };
-    const errors   = [];
-    // Diagnostic block for the Twilio call. Always included in the
-    // API response so it's inspectable from DevTools → Network when
-    // SMS isn't arriving. Holds the literal Twilio status code and
-    // error message rather than swallowing them into Vercel logs.
-    const twilio = {
-      attempted: false,
-      configured: false,
-      skipped_reason: null,   // 'config_missing' | 'phone_invalid' | null
-      sent_to: null,          // normalized E.164 destination
-      from_number: null,      // From number we used (helps debug TFV mismatch)
-      status_code: null,      // HTTP status from Twilio API
-      twilio_code: null,      // Twilio-specific numeric error code (e.g. 21610)
-      twilio_message: null,   // human-readable Twilio error
-      message_sid: null,      // SID of the sent message on success
-      threw: null,            // error message if fetch itself threw
-    };
-
-    // ─── 2. UPSTREAM WEBHOOK (LEAD_CAPTURE_URL) — only attempt if the
-    //        URL was explicitly configured. The previous default of
-    //        api.goelev8.ai/leads was creating 502s when that endpoint
-    //        didn't exist yet, so we skip the upstream step entirely
-    //        when no URL is set in Vercel env vars.
-    if (process.env.LEAD_CAPTURE_URL) {
-      const headers = { 'Content-Type': 'application/json' };
-      if (process.env.LEAD_CAPTURE_API_KEY) {
-        headers.Authorization = `Bearer ${process.env.LEAD_CAPTURE_API_KEY}`;
-      }
-      try {
-        const upstream = await fetch(process.env.LEAD_CAPTURE_URL, {
-          method: 'POST', headers, body: JSON.stringify(payload),
-        });
-        if (upstream.ok) {
-          captured.upstream = true;
-        } else {
-          const text = await upstream.text().catch(() => '');
-          errors.push(`upstream ${upstream.status}: ${text.slice(0, 200)}`);
-          console.warn('[/api/lead] upstream non-2xx (falling back)', upstream.status, text);
-        }
-      } catch (err) {
-        errors.push(`upstream fetch threw: ${err.message}`);
-        console.warn('[/api/lead] upstream fetch threw (falling back)', err);
-      }
-    }
 
     // ─── 2b. TWILIO CONFIRMATION SMS — send the customer an immediate
     //         opt-in confirmation text with the booking link. Best-effort,
@@ -281,11 +261,11 @@ module.exports = async (req, res) => {
     }
 
     // ─── 3. RESEND EMAIL FALLBACK — if a fallback address is configured
-    //        and the upstream didn't catch the lead, email the operator.
+    //        and the portal ingest didn't catch the lead, email the operator.
     //        Uses the same Resend client the merch order confirmations
     //        use, so no extra package needed.
     const fallbackEmail = process.env.LEAD_FALLBACK_EMAIL;
-    if (!captured.upstream && fallbackEmail && process.env.RESEND_API_KEY) {
+    if (!captured.portal && fallbackEmail && process.env.RESEND_API_KEY) {
       try {
         const { Resend } = require('resend');
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -319,7 +299,7 @@ module.exports = async (req, res) => {
     // If at least one persistent path worked, the lead is safe — return
     // success. Otherwise we still log so the data is in Vercel logs, but
     // surface a soft failure so the customer knows to text the gym.
-    if (captured.upstream || captured.email || captured.portal) {
+    if (captured.portal || captured.email) {
       return res.status(200).json({ ok: true, captured, twilio });
     }
 
