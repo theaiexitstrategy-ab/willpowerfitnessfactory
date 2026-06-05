@@ -195,6 +195,8 @@ async function syncOrderToPortal({ pi, items, shippingInfo, orderNumber, printif
     ? +meta.shipping_cents : Math.max(0, (pi.amount || 0) - subtotalFromItems);
   const platformFeeCents = Number.isFinite(+meta.platform_fee_cents)
     ? +meta.platform_fee_cents : 0;
+  const processingFeeCents = Number.isFinite(+meta.processing_fee_cents)
+    ? +meta.processing_fee_cents : 0;
   const stripeFeeCents = Number.isFinite(+meta.stripe_fee_cents)
     ? +meta.stripe_fee_cents : 0;
 
@@ -220,13 +222,14 @@ async function syncOrderToPortal({ pi, items, shippingInfo, orderNumber, printif
       quantity: i.q,
       price_cents: Math.round((i.p || 0) * 100),
     })),
-    subtotal_cents:     subtotalCents,
-    shipping_cents:     shippingCents,
-    platform_fee_cents: platformFeeCents,
-    stripe_fee_cents:   stripeFeeCents,
-    total_cents:        pi.amount,
-    stripe_payment_id:  pi.id,
-    printify_order_id:  printifyOrderId || undefined,
+    subtotal_cents:       subtotalCents,
+    shipping_cents:       shippingCents,
+    platform_fee_cents:   platformFeeCents,
+    processing_fee_cents: processingFeeCents,
+    stripe_fee_cents:     stripeFeeCents,
+    total_cents:          pi.amount,
+    stripe_payment_id:    pi.id,
+    printify_order_id:    printifyOrderId || undefined,
     external_order_number: orderNumber,
   };
 

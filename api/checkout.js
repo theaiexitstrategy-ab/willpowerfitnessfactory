@@ -159,21 +159,37 @@ module.exports = async (req, res) => {
     // portal's fee math doesn't get confused.
     const shipping = 0;
 
-    // Quote the GoElev8 platform fee + Stripe pass-through from the
-    // portal. If anything goes wrong, fall back to charging exactly
-    // the subtotal (no platform fee on this transaction).
+    // Quote the GoElev8 platform fee + flat processing fee + Stripe
+    // pass-through from the portal. If anything goes wrong, fall back
+    // to charging exactly the subtotal (no fees on this transaction —
+    // the portal logs the breakdown as zeros and we reconcile later).
     const feeQuote = await quotePlatformFees(subtotalCents, shipping);
-    const platformFeeCents = feeQuote ? feeQuote.platform_fee_cents : 0;
-    const stripeFeeCents   = feeQuote ? feeQuote.stripe_fee_cents   : 0;
+    const platformFeeCents   = feeQuote ? feeQuote.platform_fee_cents   : 0;
+    const processingFeeCents = feeQuote ? feeQuote.processing_fee_cents : 0;
+    const stripeFeeCents     = feeQuote ? feeQuote.stripe_fee_cents     : 0;
+    const applicationFeeCents = feeQuote ? feeQuote.application_fee_cents : 0;
     const total = feeQuote
       ? feeQuote.customer_total_cents
       : (subtotalCents + shipping);
+
+    // Stripe Connect destination: when Will has finished the Connect
+    // OAuth in the portal, his account ID lives at
+    // clients.stripe_connected_account_id and is echoed back in the
+    // fee quote. With it present, we issue a destination charge so
+    // Will is paid into HIS Stripe and the application_fee_amount
+    // (10% of subtotal + $3 processing + Stripe pass-through) is
+    // retained by GoElev8.
+    //
+    // Without it, fall back to the legacy single-account flow so
+    // checkout doesn't break — the operator can still see the order,
+    // and we reconcile the transfer manually.
+    const connectedAccountId = feeQuote?.stripe_connected_account_id || null;
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const orderNumber = `WPFF-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-    const intent = await stripe.paymentIntents.create({
+    const intentParams = {
       amount: total,
       currency: 'usd',
       receipt_email: shippingInfo.email,
@@ -193,18 +209,26 @@ module.exports = async (req, res) => {
       // these compact. items_json + shipping_json together let
       // /api/webhooks/stripe rebuild the full order if the browser
       // never reaches /api/orders (network drop, tab closed, etc.).
-      // platform_fee_cents + stripe_fee_cents recorded for the portal
-      // sync; subtotal/shipping/total kept handy for refund math.
+      // platform_fee_cents + processing_fee_cents + stripe_fee_cents
+      // recorded for the portal sync; subtotal/shipping/total kept
+      // handy for refund math.
       metadata: {
-        order_number:       orderNumber,
-        items_json:         JSON.stringify(safeItems).slice(0, 480),
-        shipping_json:      JSON.stringify(shippingInfo).slice(0, 480),
-        subtotal_cents:     String(subtotalCents),
-        shipping_cents:     String(shipping),
-        platform_fee_cents: String(platformFeeCents),
-        stripe_fee_cents:   String(stripeFeeCents),
+        order_number:         orderNumber,
+        items_json:           JSON.stringify(safeItems).slice(0, 480),
+        shipping_json:        JSON.stringify(shippingInfo).slice(0, 480),
+        subtotal_cents:       String(subtotalCents),
+        shipping_cents:       String(shipping),
+        platform_fee_cents:   String(platformFeeCents),
+        processing_fee_cents: String(processingFeeCents),
+        stripe_fee_cents:     String(stripeFeeCents),
       },
-    });
+    };
+    if (connectedAccountId && applicationFeeCents > 0) {
+      intentParams.application_fee_amount = applicationFeeCents;
+      intentParams.transfer_data = { destination: connectedAccountId };
+    }
+
+    const intent = await stripe.paymentIntents.create(intentParams);
 
     res.status(200).json({
       clientSecret: intent.client_secret,
@@ -214,12 +238,14 @@ module.exports = async (req, res) => {
       // the customer exactly how their total is composed before they
       // hit Pay.
       breakdown: {
-        subtotal_cents:     subtotalCents,
-        shipping_cents:     shipping,
-        platform_fee_cents: platformFeeCents,
-        stripe_fee_cents:   stripeFeeCents,
-        total_cents:        total
-      }
+        subtotal_cents:       subtotalCents,
+        shipping_cents:       shipping,
+        platform_fee_cents:   platformFeeCents,
+        processing_fee_cents: processingFeeCents,
+        stripe_fee_cents:     stripeFeeCents,
+        total_cents:          total
+      },
+      stripe_connect: connectedAccountId ? 'destination' : 'platform_only'
     });
   } catch (err) {
     console.error('[/api/checkout]', err);
