@@ -943,10 +943,17 @@
         `;
       }
 
+      // onerror: if the (often portal-supplied) image URL 404s, swap to
+      // the hardcoded fallback we stashed in loadPortalProducts. Strip
+      // the onerror after swapping so a missing fallback can't loop.
+      const fb = defaultColor.fallbackImage || '';
+      const onerr = fb
+        ? `this.onerror=null;this.src='${fb.replace(/'/g, "\\'")}';`
+        : `this.onerror=null;`;
       return `
         <button class="prod-card" data-id="${p.id}">
           <div class="prod-img-wrap ${defaultColor.plate}">
-            <img src="${defaultColor.image}" alt="${p.name} — ${defaultColor.name}" loading="lazy"/>
+            <img src="${defaultColor.image}" alt="${p.name} — ${defaultColor.name}" loading="lazy" onerror="${onerr}"/>
             <span class="hover-cta">Select Options →</span>
           </div>
           <div class="prod-info">
@@ -1007,6 +1014,12 @@
     const { product, colorIdx, sizeIdx } = modalSelection;
     const color = product.colors[colorIdx];
     const imgEl = document.getElementById('modalImgEl');
+    // Wire the same onerror fallback the grid uses so the modal hero
+    // doesn't blow up when the portal-supplied URL is dead.
+    imgEl.onerror = () => {
+      imgEl.onerror = null;
+      if (color.fallbackImage) imgEl.src = color.fallbackImage;
+    };
     imgEl.src = color.image || '';
     imgEl.alt = `${product.name} — ${color.name}`;
     const modalImg = document.getElementById('modalImg');
@@ -1377,8 +1390,14 @@
       local.description = pp.description || local.description;
       local.available   = pp.image_url ? true : local.available;  // portal can flip Coming Soon on once a photo is set
       if (pp.image_url && local.colors && local.colors[0]) {
-        // Replace the first color's image with the portal-uploaded
-        // photo so the grid + modal use the latest asset.
+        // Stash the hardcoded image as a fallback BEFORE overriding —
+        // when the portal URL 404s (stale row pointing at a deleted
+        // file, deploy lag on the storage bucket, etc.) the grid +
+        // modal onerror handlers swap back to the local image so the
+        // storefront never shows a broken-image placeholder.
+        if (!local.colors[0].fallbackImage) {
+          local.colors[0].fallbackImage = local.colors[0].image;
+        }
         local.colors[0].image = pp.image_url;
       }
       delete portalByKey[local.id];  // mark as consumed
