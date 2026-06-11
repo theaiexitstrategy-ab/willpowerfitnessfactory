@@ -324,6 +324,18 @@
       font-family: 'Barlow', sans-serif; font-weight: 300;
       font-size: 0.9rem; color: var(--light);
       line-height: 1.65; margin-bottom: 22px;
+      /* Preserve line breaks + spacing pasted in from the portal
+         description field (Will pastes copy from ChatGPT etc). */
+      white-space: pre-wrap; word-wrap: break-word;
+    }
+    /* Description shown directly on the product grid card, beneath
+       the name + price. Mirrors the modal styling at a smaller scale. */
+    .prod-desc {
+      font-family: 'Barlow', sans-serif; font-weight: 300;
+      font-size: 0.74rem; color: var(--silver);
+      line-height: 1.5; margin: 4px 0 0;
+      white-space: pre-wrap; word-wrap: break-word;
+      max-height: 4.5em; overflow: hidden;
     }
     .modal .label {
       display: block;
@@ -950,6 +962,17 @@
       const onerr = fb
         ? `this.onerror=null;this.src='${fb.replace(/'/g, "\\'")}';`
         : `this.onerror=null;`;
+      // Escape the description for safe inline HTML — strips
+      // angle brackets / quotes so a description from the portal can't
+      // break out of the markup. Renders empty if no description so
+      // the card layout stays compact. CSS .prod-desc preserves the
+      // whitespace from the original text.
+      const escapeForHtml = (s) => String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const descHtml = p.description
+        ? `<p class="prod-desc">${escapeForHtml(p.description)}</p>`
+        : '';
       return `
         <button class="prod-card" data-id="${p.id}">
           <div class="prod-img-wrap ${defaultColor.plate}">
@@ -959,6 +982,7 @@
           <div class="prod-info">
             <p class="prod-name">${p.name}</p>
             <p class="prod-price">$${p.price.toFixed(2)}</p>
+            ${descHtml}
             <div class="prod-swatches">${swatches}</div>
           </div>
         </button>
