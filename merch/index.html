@@ -1189,9 +1189,54 @@
       <button class="btn-checkout" id="startCheckout">Checkout →</button>
       ${PICKUP_NOTICE_HTML}
     `;
-    document.getElementById('startCheckout').addEventListener('click', () => {
+    // Migrated to the portal-hosted /api/external/checkout endpoint
+    // (same flow as iSlay Studios and The Flex Facility). Stripe
+    // Checkout collects name + email + phone + shipping address
+    // natively, so the storefront just hands over the cart contents
+    // and redirects. Order recording, the order-received SMS, push
+    // notifications, and the platform fee are all handled by the
+    // portal webhook → lib/merch-ingest.js path. Will's connected
+    // Stripe account receives the funds (Connect direct charge).
+    //
+    // NOTE: Printify auto-fulfillment that used to fire from the WPFF
+    // internal webhook is OUT of this path. Pack orders manually from
+    // the portal Merch → Orders tab until the Printify trigger is
+    // re-wired into the portal merch-ingest helper.
+    document.getElementById('startCheckout').addEventListener('click', async (e) => {
       if (cart.length === 0) return;
-      checkoutStep = 'shipping'; renderCart();
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = 'Redirecting to Stripe…';
+      try {
+        const items = cart.map(l => ({
+          product_key: l.productId,
+          quantity:    l.quantity,
+          variant:     (l.size || l.color) ? { size: l.size || undefined, color: l.color || undefined } : undefined
+        }));
+        const r = await fetch((window.PORTAL_URL || 'https://portal.goelev8.ai') + '/api/external/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug: (window.PORTAL_SLUG || 'willpower-fitness'),
+            items
+          })
+        });
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || !data.url) {
+          const reason = data.message || data.error || ('HTTP ' + r.status);
+          throw new Error(reason);
+        }
+        // Clear the cart now — Stripe redirect is one-way; if the
+        // customer abandons checkout they'll come back to an empty
+        // cart, which is fine UX (they can re-add).
+        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        cart = [];
+        window.location.href = data.url;
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Checkout →';
+        alert('Could not start checkout: ' + err.message);
+      }
     });
   }
 
