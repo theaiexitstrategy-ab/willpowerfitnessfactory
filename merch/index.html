@@ -1074,6 +1074,11 @@
       price: product.price,
       color: product.colors[colorIdx].name,
       colorImage: product.colors[colorIdx].image,
+      // Snapshot the local fallback alongside the (possibly portal-
+      // sourced) primary image so the cart can recover even if PRODUCTS
+      // can't be resolved back later (e.g. operator removed the product
+      // from the portal after the customer already added it to cart).
+      colorFallbackImage: product.colors[colorIdx].fallbackImage || product.colors[colorIdx].image,
       colorPlate: product.colors[colorIdx].plate,
       size: product.sizes[sizeIdx],
       quantity: 1
@@ -1175,10 +1180,34 @@
       return;
     }
 
-    body.innerHTML = cart.map((line, i) => `
+    // Resolve a fallback image for each cart line by looking the
+    // product/color back up in PRODUCTS. line.colorImage is snapshotted
+    // at add-to-cart time, so a line added BEFORE the portal-URL
+    // fallback fix landed (or any line whose portal URL has since gone
+    // 404) needs a fresh source-of-truth to recover from. We use the
+    // current color.fallbackImage (or .image if no portal override
+    // was ever applied) and bake it into the <img> onerror handler.
+    const resolveFallback = (line) => {
+      // Prefer the fallback baked into the cart line at add-time. Then
+      // fall back to a live PRODUCTS lookup (handles old cart lines
+      // saved before colorFallbackImage existed).
+      if (line.colorFallbackImage) return line.colorFallbackImage;
+      const p = PRODUCTS.find(p => p.id === line.productId);
+      if (!p) return '';
+      const c = (p.colors || []).find(c => c.name === line.color);
+      if (!c) return '';
+      return c.fallbackImage || c.image || '';
+    };
+
+    body.innerHTML = cart.map((line, i) => {
+      const fb = resolveFallback(line);
+      const onerr = fb
+        ? `this.onerror=null;this.src='${fb.replace(/'/g, "\\'")}';`
+        : `this.onerror=null;this.style.display='none';`;
+      return `
       <div class="cart-item">
         <div class="thumb ${line.colorPlate || ''}">
-          ${line.colorImage ? `<img src="${line.colorImage}" alt=""/>` : ''}
+          ${line.colorImage ? `<img src="${line.colorImage}" alt="" onerror="${onerr}"/>` : ''}
         </div>
         <div class="info">
           <p class="nm">${line.name}</p>
@@ -1194,7 +1223,8 @@
           <button class="rm" data-i="${i}">Remove</button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     body.querySelectorAll('.qty-stepper button').forEach(b => {
       b.addEventListener('click', () => {
