@@ -491,9 +491,43 @@
       display: flex; justify-content: space-between;
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 0.85rem; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--silver); margin-bottom: 14px;
+      color: var(--silver); margin-bottom: 8px;
     }
     .cart-foot .sub strong { color: var(--white); }
+    /* Smaller fee row sandwiched between subtotal and total — sets
+       the customer's expectation that the $3 line is real and added
+       to the total they'll pay on Stripe Checkout. */
+    .cart-foot .fee-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--silver); margin-bottom: 8px;
+    }
+    .cart-foot .fee-row .fee-note {
+      font-size: 0.6rem; letter-spacing: 0.14em;
+      color: var(--silver); opacity: 0.7;
+      text-transform: none; margin-left: 8px;
+      font-style: italic;
+    }
+    .cart-foot .total {
+      display: flex; justify-content: space-between;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--white);
+      padding-top: 10px; margin-bottom: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .cart-foot .total strong { font-weight: 700; }
+
+    /* Inline pre-cart disclosure under the Add to Cart button so the
+       customer reads it before committing — keeps the fee from being
+       a surprise even before they open the cart drawer. */
+    .fee-disclose {
+      margin-top: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--silver); text-align: center;
+    }
     .btn-checkout {
       width: 100%; background: var(--white); color: var(--black);
       border: none;
@@ -774,6 +808,7 @@
       <div class="opts" id="modalSizes"></div>
 
       <button class="btn-add" id="modalAdd">Add to Cart</button>
+      <p class="fee-disclose">+ $3 Service Fee at Checkout</p>
       <div class="pickup-notice">
         <strong>📍 Pickup Only</strong>
         All orders picked up at The Flex Facility<br/>
@@ -871,6 +906,15 @@
   ];
 
   const STORAGE_KEY = 'wpff_merch_cart_v1';
+
+  // Flat per-transaction processing fee added server-side by the portal
+  // /api/external/checkout endpoint and shown as a line item on the
+  // Stripe Checkout page. Pre-disclosing it in the cart breakdown so
+  // the customer isn't surprised by the bump when they get to Stripe.
+  // Must match PROCESSING_FEE_DEFAULT_CENTS on the portal — if that
+  // ever moves off $3, update here too (or wire a /api/external/fees
+  // fetch on page load).
+  const SERVICE_FEE_CENTS = 300;
 
   // Surfaced under each purchase-decision button so customers know
   // orders are picked up in person at The Flex Facility, not shipped.
@@ -1146,7 +1190,7 @@
       // Stripe pass-through fees are added server-side by /api/checkout
       // — if the user proceeds and that quote bumps the total, the
       // Stripe Payment Element shows the final amount before they pay.
-      const totalCents = subtotalCents();
+      const totalCents = subtotalCents() + SERVICE_FEE_CENTS;
       body.innerHTML = `
         <div class="checkout-step">
           <h3>Pay with card</h3>
@@ -1238,8 +1282,14 @@
     });
 
     const sub = subtotalCents();
+    const total = sub + SERVICE_FEE_CENTS;
     foot.innerHTML = `
       <div class="sub"><span>Subtotal</span><strong>$${(sub/100).toFixed(2)}</strong></div>
+      <div class="fee-row">
+        <span>Service Fee <span class="fee-note">(card processing)</span></span>
+        <span>$${(SERVICE_FEE_CENTS/100).toFixed(2)}</span>
+      </div>
+      <div class="total"><span>Total</span><strong>$${(total/100).toFixed(2)}</strong></div>
       <button class="btn-checkout" id="startCheckout">Checkout →</button>
       ${PICKUP_NOTICE_HTML}
     `;
