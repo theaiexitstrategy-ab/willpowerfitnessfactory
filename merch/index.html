@@ -7,6 +7,15 @@
   <title>Merch | Will Power Fitness Factory</title>
   <meta name="description" content="Official Will Power Fitness Factory merch — tees, tanks, and gear. Train hard. Represent harder."/>
 
+  <!-- GoElev8 first-party tracker — page views + form captures
+       roll into the WPFF portal Analytics tab. Lives alongside GA4
+       (gtag.js below) so the two systems run in parallel.
+       slug must match the WPFF tenant slug in the portal clients table. -->
+  <script>
+    window.GoElev8 = { slug: "willpower-fitness", secret: "REPLACE_WITH_GOELEV8_SECRET" };
+  </script>
+  <script src="https://portal.goelev8.ai/embed/track.js" async></script>
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-2EGV382R9C"></script>
   <script>
