@@ -334,6 +334,90 @@
       margin-top: 8px;
     }
 
+    /* ════════════════════════════════
+       GET YOUR MERCH — homepage teaser for /merch. Two-column with a
+       merch image collage on one side and copy + CTA on the other.
+       Sits between Results and the Book CTA so the customer sees it
+       after they've bought into the brand.
+    ════════════════════════════════ */
+    .merch-promo {
+      padding: 96px 20px;
+      background: var(--black);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative; overflow: hidden;
+    }
+    .merch-promo::before {
+      content: 'REP THE BRAND';
+      position: absolute;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22vw; color: rgba(255,107,0,0.04);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      white-space: nowrap; pointer-events: none; z-index: 0;
+    }
+    .merch-promo-inner {
+      max-width: 1160px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr; gap: 48px;
+      align-items: center;
+      position: relative; z-index: 1;
+    }
+    @media (min-width: 880px) {
+      .merch-promo-inner { grid-template-columns: 1.05fr 1fr; gap: 72px; }
+    }
+    .merch-promo-images {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      max-width: 520px; margin: 0 auto;
+    }
+    .merch-promo-images .mp-img {
+      background: var(--char);
+      border: 1px solid var(--border);
+      aspect-ratio: 1 / 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 18px;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+    .merch-promo-images .mp-img:hover {
+      transform: translateY(-3px); border-color: var(--fire);
+    }
+    .merch-promo-images .mp-img img {
+      max-width: 100%; max-height: 100%; object-fit: contain;
+    }
+    .merch-promo-copy .ey {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+      font-size: 0.7rem; letter-spacing: 0.42em; text-transform: uppercase;
+      color: var(--fire); margin-bottom: 14px;
+    }
+    .merch-promo-copy h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      letter-spacing: 0.03em; line-height: 0.95;
+      margin-bottom: 18px;
+    }
+    .merch-promo-copy h2 .accent {
+      -webkit-text-stroke: 2px var(--fire);
+      color: transparent;
+    }
+    .merch-promo-copy p {
+      font-family: 'Barlow', sans-serif; font-weight: 300;
+      font-size: 1.02rem; line-height: 1.7; color: var(--light);
+      margin-bottom: 28px; max-width: 44ch;
+    }
+    .merch-promo-cta {
+      display: inline-block;
+      background: var(--fire); color: var(--black);
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.9rem; letter-spacing: 0.26em; text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 36px;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 8px 20px -8px rgba(255,107,0,0.5);
+    }
+    .merch-promo-cta:hover {
+      opacity: 0.95; transform: translateY(-2px);
+      box-shadow: 0 14px 26px -10px rgba(255,107,0,0.65);
+    }
+
     /* Compact 8-up values grid. 2-col phablet → 4-col desktop so 8
        values lay out as 4×2 instead of the dedicated page's 3-col
        (which would leave 2 stragglers on the bottom row). */
@@ -1025,6 +1109,29 @@
         <div class="testi-role">Semi-Private Client</div>
       </div>
 
+    </div>
+  </div>
+</section>
+
+<!-- ══ GET YOUR MERCH ══ -->
+<!-- Drives traffic from the homepage to /merch after the customer has
+     seen the social proof. Sits before the Book CTA so the book-a-
+     session offer remains the primary call-to-action of the page. -->
+<section class="merch-promo" id="merch">
+  <div class="merch-promo-inner">
+    <div class="merch-promo-images r">
+      <div class="mp-img">
+        <img src="/wpff-tshirt.png" alt="WillPower Fitness Factory tee" loading="lazy"/>
+      </div>
+      <div class="mp-img">
+        <img src="/wpff-tanktop.png" alt="WillPower Fitness Factory tank" loading="lazy"/>
+      </div>
+    </div>
+    <div class="merch-promo-copy r">
+      <span class="ey">Official Apparel</span>
+      <h2>GET YOUR <span class="accent">MERCH</span>.</h2>
+      <p>Premium tees and tanks built for the grind. Train hard. Represent harder. Pickup free at The Flex Facility.</p>
+      <a href="/merch/" class="merch-promo-cta">Shop Merch →</a>
     </div>
   </div>
 </section>
