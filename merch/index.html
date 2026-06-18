@@ -1513,13 +1513,71 @@
   // -------- PORTAL PRODUCT SYNC ------------------------------------
   // After initial paint with the hardcoded PRODUCTS list, fetch
   // whatever Will set in the GoElev8 portal so name/price/description/
-  // availability/image stay in sync without redeploying this page.
-  // Variant info (sizes, colors) stays here because the portal schema
-  // doesn't model per-product variants yet — additions from the
-  // portal that don't match a hardcoded id get a generic single-
-  // variant card with the uploaded image.
+  // availability/image AND color variants stay in sync without
+  // redeploying this page. The portal stores color variants as a
+  // jsonb array of { name, image_url } on merch_products.colors and
+  // /api/external/products returns it as `colors`; sizes still live
+  // in this hardcoded list because the portal schema doesn't model
+  // per-product sizes yet.
   const PORTAL_URL = 'https://portal.goelev8.ai';
   const PORTAL_SLUG = 'willpower-fitness';
+
+  // Common color-name → swatch hex + dark/light plate mapping. The
+  // portal only stores name + image_url; we derive the swatch dot
+  // colour and whether the product photo is presented on a dark or
+  // light tile from this map. Unknown names fall through to a
+  // neutral charcoal with dark plate so the swatch still renders.
+  const COLOR_HEX = {
+    white: '#f2f2f2', black: '#0b0b0b', red: '#7a1f1f', tan: '#c9a981',
+    pink: '#e88aa1', grey: '#6b6b6b', gray: '#6b6b6b', navy: '#1a2a4a',
+    blue: '#1f4a7a', green: '#2a6b3a', orange: '#FF6B00', yellow: '#e7c43a'
+  };
+  const LIGHT_PLATE = new Set(['white', 'tan', 'pink', 'yellow', 'grey', 'gray']);
+  function colorMeta(name) {
+    const k = String(name || '').trim().toLowerCase();
+    return {
+      hex:   COLOR_HEX[k] || '#1a1a1a',
+      plate: LIGHT_PLATE.has(k) ? 'light' : 'dark'
+    };
+  }
+
+  // Normalize a product key for cross-matching portal rows to the
+  // hardcoded PRODUCTS list. The portal uses operator-chosen keys
+  // (`TShirt`, `Tank`) while the local list uses lowercase shorthand
+  // (`tee`, `tank`). Aliases let us tolerate either form so the
+  // hardcoded variants (sizes, etc.) still apply when the operator
+  // didn't realize they had to match a specific spelling.
+  const KEY_ALIASES = {
+    tshirt: 'tee', t_shirt: 'tee', tee_shirt: 'tee', shirt: 'tee',
+    tank: 'tank', tanktop: 'tank', tank_top: 'tank',
+    hoodie: 'hoodie', pullover: 'hoodie',
+    snapback: 'snapback', cap: 'snapback', hat: 'snapback'
+  };
+  function normalizeKey(k) {
+    const lc = String(k || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return KEY_ALIASES[lc] || lc;
+  }
+
+  // Build a colors[] array for a PRODUCT entry from the portal's
+  // colors[]. Each portal entry → { name, hex, image, plate,
+  // fallbackImage }. The fallback comes from a matching hardcoded
+  // color of the same name (if any) so a 404 on the portal-uploaded
+  // image still degrades to the local file we ship.
+  function buildColorsFromPortal(portalColors, localColors) {
+    const localByName = {};
+    for (const lc of localColors || []) localByName[String(lc.name || '').toLowerCase()] = lc;
+    return portalColors.map(pc => {
+      const meta = colorMeta(pc.name);
+      const local = localByName[String(pc.name || '').toLowerCase()];
+      return {
+        name:           pc.name,
+        hex:            meta.hex,
+        plate:          meta.plate,
+        image:          pc.image_url || (local && local.image) || '',
+        fallbackImage:  (local && local.image) || ''
+      };
+    }).filter(c => c.image);  // skip variants the operator left without any image
+  }
 
   async function loadPortalProducts() {
     let portalProducts;
@@ -1536,57 +1594,72 @@
     }
     if (!portalProducts.length) return;
 
-    // Override matching hardcoded entries with portal values.
+    // Index portal rows by normalized key so case + spelling drift
+    // between the operator's portal entry and the hardcoded id can't
+    // break the match (TShirt → tee, Tanktop → tank, etc.).
     const portalByKey = {};
-    for (const pp of portalProducts) portalByKey[pp.key] = pp;
+    for (const pp of portalProducts) portalByKey[normalizeKey(pp.key)] = pp;
 
     for (const local of PRODUCTS) {
-      const pp = portalByKey[local.id];
+      const pp = portalByKey[normalizeKey(local.id)];
       if (!pp) continue;
       local.name        = pp.name || local.name;
       local.price       = (pp.price_cents || 0) / 100;
       local.description = pp.description || local.description;
-      local.available   = pp.image_url ? true : local.available;  // portal can flip Coming Soon on once a photo is set
-      if (pp.image_url && local.colors && local.colors[0]) {
-        // Stash the hardcoded image as a fallback BEFORE overriding —
-        // when the portal URL 404s (stale row pointing at a deleted
-        // file, deploy lag on the storage bucket, etc.) the grid +
-        // modal onerror handlers swap back to the local image so the
-        // storefront never shows a broken-image placeholder.
+      // Operator's portal variants take over completely when present —
+      // the customer should see exactly what Will uploaded. When no
+      // portal variants are set, fall back to the legacy single-image
+      // override of colors[0] so existing rows without a colors[]
+      // array still pick up the portal-uploaded primary image.
+      if (Array.isArray(pp.colors) && pp.colors.length) {
+        const built = buildColorsFromPortal(pp.colors, local.colors);
+        if (built.length) local.colors = built;
+      } else if (pp.image_url && local.colors && local.colors[0]) {
         if (!local.colors[0].fallbackImage) {
           local.colors[0].fallbackImage = local.colors[0].image;
         }
         local.colors[0].image = pp.image_url;
       }
-      delete portalByKey[local.id];  // mark as consumed
+      // Available once ANY image source exists (portal primary, any
+      // portal variant, or a hardcoded image that survived).
+      local.available =
+        !!pp.image_url ||
+        (Array.isArray(pp.colors) && pp.colors.some(c => c.image_url)) ||
+        local.available;
+      delete portalByKey[normalizeKey(local.id)];  // mark as consumed
     }
 
-    // Anything still in portalByKey is a new product the operator
-    // added that doesn't exist in this hardcoded list. Render it
-    // with a generic single-variant card.
+    // Anything still in portalByKey is a product the operator added
+    // that doesn't match a hardcoded id. Render it with whatever
+    // variants the portal returned, or a single Default tile when no
+    // variants were set.
     for (const pp of Object.values(portalByKey)) {
+      const colors = Array.isArray(pp.colors) && pp.colors.length
+        ? buildColorsFromPortal(pp.colors, [])
+        : [{
+            name:  'Default',
+            hex:   '#1a1a1a',
+            image: pp.image_url || '/wpff-tanktop.png',
+            plate: 'dark'
+          }];
       PRODUCTS.push({
         id:          pp.key,
         name:        pp.name,
         price:       (pp.price_cents || 0) / 100,
         description: pp.description || '',
-        // Sensible defaults — operator can request real variants later.
-        sizes:  ['S', 'M', 'L', 'XL', '2XL'],
-        colors: [{
-          name:  'Default',
-          hex:   '#1a1a1a',
-          image: pp.image_url || '/wpff-tanktop.png',
-          plate: 'dark'
-        }],
-        available: !!pp.image_url
+        sizes:       ['S', 'M', 'L', 'XL', '2XL'],
+        colors,
+        available:   !!(pp.image_url || colors.some(c => c.image))
       });
     }
 
     // Sort by the portal's sort_order so operator reordering takes
-    // effect on the storefront grid too.
+    // effect on the storefront grid too. Match via normalized key so
+    // the lookup survives the case/spelling tolerance above.
     PRODUCTS.sort((a, b) => {
-      const sa = portalProducts.find(p => p.key === a.id)?.sort_order ?? 99;
-      const sb = portalProducts.find(p => p.key === b.id)?.sort_order ?? 99;
+      const ak = normalizeKey(a.id), bk = normalizeKey(b.id);
+      const sa = portalProducts.find(p => normalizeKey(p.key) === ak)?.sort_order ?? 99;
+      const sb = portalProducts.find(p => normalizeKey(p.key) === bk)?.sort_order ?? 99;
       return sa - sb;
     });
 
