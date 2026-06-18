@@ -313,6 +313,18 @@
     }
     .modal-img.dark { background: #1a1a1a; }
     .modal-img img { width: 100%; height: 100%; object-fit: cover; }
+    /* Mobile: a square photo at full screen-width pushes Color/Size
+       options below the fold so they read as "covered up." Cap the
+       image at ~38vh and switch to object-fit: contain so the whole
+       shirt is visible while leaving room for the picker controls. */
+    @media (max-width: 699px) {
+      .modal-img {
+        aspect-ratio: auto;
+        height: 38vh;
+        max-height: 320px;
+      }
+      .modal-img img { object-fit: contain; padding: 16px; }
+    }
     .modal-body { padding: 28px; }
     .modal-close {
       position: absolute; top: 12px; right: 14px;
