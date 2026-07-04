@@ -243,6 +243,24 @@
     .prod-price {
       font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
       color: var(--white); letter-spacing: 0.04em; margin-top: 6px;
+      display: inline-flex; align-items: baseline; gap: 8px;
+      flex-wrap: wrap;
+    }
+    /* Struck-through original price shown before the sale price when
+       the operator set compare_at_price on the portal product row.
+       Dimmed silver + line-through so the eye lands on the sale price. */
+    .prod-price .was {
+      color: var(--silver);
+      text-decoration: line-through;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+    }
+    .prod-price .save {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
+      background: #7a1f1f; color: #fff;
+      padding: 3px 8px;
+      align-self: center;
     }
     .prod-swatches { display: flex; gap: 6px; margin-top: 10px; }
     .swatch {
@@ -340,6 +358,20 @@
     .modal .price {
       font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
       color: var(--white); margin: 4px 0 14px;
+      display: inline-flex; align-items: baseline; gap: 10px;
+      flex-wrap: wrap;
+    }
+    .modal .price .was {
+      color: var(--silver);
+      text-decoration: line-through;
+      font-size: 1.05rem; letter-spacing: 0.02em;
+    }
+    .modal .price .save {
+      font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+      font-size: 0.66rem; letter-spacing: 0.22em; text-transform: uppercase;
+      background: #7a1f1f; color: #fff;
+      padding: 4px 10px;
+      align-self: center;
     }
     .modal .desc {
       font-family: 'Barlow', sans-serif; font-weight: 300;
@@ -947,6 +979,20 @@
     </div>
   `;
 
+  // Render the price block: sale price alone, or "was $X" strike-through +
+  // sale price + SAVE $N badge when comparePrice is set. Rounded down
+  // to whole-dollar savings so the badge doesn't say "SAVE $9.99" for a
+  // $10 discount. Both grid card and modal use this helper so the two
+  // views can't drift apart.
+  function priceHtml(p) {
+    const sale = Number(p.price || 0);
+    const compare = Number(p.comparePrice || 0);
+    if (!(compare > sale)) return `$${sale.toFixed(2)}`;
+    const save = Math.floor(compare - sale);
+    return `<span class="was">$${compare.toFixed(2)}</span> $${sale.toFixed(2)}` +
+           (save > 0 ? ` <span class="save">Save $${save}</span>` : '');
+  }
+
   // -------- CART STATE ----------------------------------------------
   // A "line" represents one product+color+size combo. Quantity is a
   // separate field so the same line increments instead of duplicating.
@@ -1013,7 +1059,7 @@
             </div>
             <div class="prod-info">
               <p class="prod-name">${p.name} <span style="color:var(--silver); font-weight:400;">(Coming Soon)</span></p>
-              <p class="prod-price">$${p.price.toFixed(2)}</p>
+              <p class="prod-price">${priceHtml(p)}</p>
               <div class="prod-swatches">${swatches}</div>
             </div>
           </button>
@@ -1046,7 +1092,7 @@
           </div>
           <div class="prod-info">
             <p class="prod-name">${p.name}</p>
-            <p class="prod-price">$${p.price.toFixed(2)}</p>
+            <p class="prod-price">${priceHtml(p)}</p>
             ${descHtml}
             <div class="prod-swatches">${swatches}</div>
           </div>
@@ -1069,7 +1115,8 @@
     modalSelection = { product, colorIdx: 0, sizeIdx: 0 };
 
     document.getElementById('modalTitle').textContent = product.name;
-    document.getElementById('modalPrice').textContent = `$${product.price.toFixed(2)}`;
+    // innerHTML is safe here — priceHtml() only interpolates numbers.
+    document.getElementById('modalPrice').innerHTML = priceHtml(product);
     document.getElementById('modalDesc').textContent = product.description;
 
     document.getElementById('modalColors').innerHTML = product.colors.map((c, i) =>
@@ -1617,6 +1664,12 @@
       if (!pp) continue;
       local.name        = pp.name || local.name;
       local.price       = (pp.price_cents || 0) / 100;
+      // Optional MSRP / "was" price for the strike-through display.
+      // Only kept when strictly greater than the sale price so a
+      // portal row set to the same value doesn't render a redundant
+      // strikethrough or a "SAVE $0" badge.
+      local.comparePrice = pp.compare_at_price_cents && (pp.compare_at_price_cents / 100) > local.price
+        ? pp.compare_at_price_cents / 100 : null;
       local.description = pp.description || local.description;
       // Operator's portal variants take over completely when present —
       // the customer should see exactly what Will uploaded. When no
@@ -1654,10 +1707,13 @@
             image: pp.image_url || '/wpff-tanktop.png',
             plate: 'dark'
           }];
+      const salePrice = (pp.price_cents || 0) / 100;
       PRODUCTS.push({
         id:          pp.key,
         name:        pp.name,
-        price:       (pp.price_cents || 0) / 100,
+        price:       salePrice,
+        comparePrice: pp.compare_at_price_cents && (pp.compare_at_price_cents / 100) > salePrice
+          ? pp.compare_at_price_cents / 100 : null,
         description: pp.description || '',
         sizes:       ['S', 'M', 'L', 'XL', '2XL'],
         colors,
