@@ -614,17 +614,15 @@
     }
     .loc-card:hover { border-color: var(--fire); transform: translateY(-3px); }
 
-    /* Both partner marks are dark-ink artwork, so they sit on a white plate
-       instead of being recoloured — keeps each brand accurate on our black
-       page and gives the two cards the same optical weight. */
-    .loc-plate {
-      background: #fff; height: 124px; margin-bottom: 22px;
-      display: flex; align-items: center; justify-content: center;
-      padding: 18px 26px;
+    /* Marks sit straight on the card — both files are transparent
+       dark-background lockups, so no plate behind them. */
+    .loc-mark {
+      height: 110px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: flex-start;
     }
-    .loc-plate img { width: auto; max-width: 100%; object-fit: contain; display: block; }
-    .loc-plate.is-mark img { max-height: 88px; }   /* round badge lockup  */
-    .loc-plate.is-word img { max-height: 70px; }   /* horizontal wordmark */
+    .loc-mark img { width: auto; max-width: 100%; object-fit: contain; display: block; }
+    .loc-mark.is-badge img { max-height: 104px; }  /* round badge lockup  */
+    .loc-mark.is-wordmark img { max-height: 76px; } /* horizontal wordmark */
 
     .loc-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.55rem; letter-spacing: 0.04em; line-height: 1; }
     .loc-role { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 0.64rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--fire); margin-top: 8px; }
@@ -1107,7 +1105,7 @@
 
       <a href="https://theflexfacility.com" class="loc-card r" target="_blank" rel="noopener"
          aria-label="The Flex Facility in Earth City, Missouri — opens theflexfacility.com in a new tab">
-        <div class="loc-plate is-mark">
+        <div class="loc-mark is-badge">
           <img src="flex-facility-logo.png" alt="The Flex Facility" width="512" height="512" loading="lazy"/>
         </div>
         <div class="loc-name">The Flex Facility</div>
@@ -1118,7 +1116,7 @@
 
       <a href="https://southsideiron.com" class="loc-card r" target="_blank" rel="noopener"
          aria-label="Southside Iron in Columbia, Illinois — opens southsideiron.com in a new tab">
-        <div class="loc-plate is-word">
+        <div class="loc-mark is-wordmark">
           <img src="southside-iron-logo.webp" alt="Southside Iron" width="290" height="119" loading="lazy"/>
         </div>
         <div class="loc-name">Southside Iron</div>
