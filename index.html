@@ -582,12 +582,15 @@
     .creds { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
     .cred { font-family: 'Barlow Condensed', sans-serif; font-weight: 500; font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--light); border: 1px solid var(--border); padding: 4px 10px; }
 
-    /* Flex Facility callout */
+    /* Training-locations callout in the bio — jumps down to #locations */
     .flex-callout {
       display: flex; align-items: center; gap: 14px;
       background: var(--dark); border: 1px solid var(--border);
       padding: 14px 16px; margin-bottom: 28px;
+      text-decoration: none; color: inherit;
+      transition: border-color 0.2s, background 0.2s;
     }
+    a.flex-callout:hover { border-color: var(--fire); background: var(--mid); }
     .flex-callout .fc-logo {
       width: 40px; height: 40px; flex-shrink: 0;
       background: var(--mid); border-radius: 50%;
@@ -596,6 +599,38 @@
     }
     .flex-callout .fc-text .fc-name { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; }
     .flex-callout .fc-text .fc-sub { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--silver); margin-top: 2px; }
+
+    /* ════════════════════════════════
+       TRAINING LOCATIONS
+    ════════════════════════════════ */
+    .loc-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media(min-width:760px){ .loc-grid { grid-template-columns: 1fr 1fr; } }
+
+    .loc-card {
+      display: block; text-decoration: none; color: inherit;
+      background: var(--black); border: 1px solid var(--border);
+      padding: 26px 26px 28px;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .loc-card:hover { border-color: var(--fire); transform: translateY(-3px); }
+
+    /* Both partner marks are dark-ink artwork, so they sit on a white plate
+       instead of being recoloured — keeps each brand accurate on our black
+       page and gives the two cards the same optical weight. */
+    .loc-plate {
+      background: #fff; height: 124px; margin-bottom: 22px;
+      display: flex; align-items: center; justify-content: center;
+      padding: 18px 26px;
+    }
+    .loc-plate img { width: auto; max-width: 100%; object-fit: contain; display: block; }
+    .loc-plate.is-mark img { max-height: 88px; }   /* round badge lockup  */
+    .loc-plate.is-word img { max-height: 70px; }   /* horizontal wordmark */
+
+    .loc-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.55rem; letter-spacing: 0.04em; line-height: 1; }
+    .loc-role { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 0.64rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--fire); margin-top: 8px; }
+    .loc-addr { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 0.85rem; line-height: 1.65; color: var(--silver); margin-top: 12px; }
+    .loc-cta { display: inline-block; margin-top: 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--light); transition: color 0.2s; }
+    .loc-card:hover .loc-cta { color: var(--fire); }
 
     /* ════════════════════════════════
        SMS BAND
@@ -769,6 +804,11 @@
     /* ════════════════════════════════
        NAV HIDE ON MOBILE
     ════════════════════════════════ */
+    /* Six links need a tighter rhythm before the mobile cut-off. */
+    @media(max-width:900px){
+      .nav-links { gap: 1rem; }
+      .nav-links a { font-size: 0.72rem; letter-spacing: 0.14em; }
+    }
     @media(max-width:680px){
       .nav-links { display:none; }
       nav { padding: 0 16px; }
@@ -785,6 +825,7 @@
   <ul class="nav-links">
     <li><a href="#programs">Programs</a></li>
     <li><a href="#about">About</a></li>
+    <li><a href="#locations">Locations</a></li>
     <li><a href="/mission/">Mission</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="/merch/">Merch</a></li>
@@ -814,7 +855,7 @@
     <aside class="hero-form-panel" id="free-session">
       <span class="ey">One Free Session</span>
       <h3>CLAIM YOUR SPOT.</h3>
-      <p class="hp-sub">Drop your info to book your free first session with William at The Flex Facility.</p>
+      <p class="hp-sub">Drop your info to book your free first session with William — The Flex Facility (Earth City, MO) or Southside Iron (Columbia, IL).</p>
 
       <form id="leadForm" class="lead-form" novalidate>
         <div class="row2">
@@ -1028,14 +1069,14 @@
         <h2 class="bio-name">WILLIAM<br/>ANDERSON</h2>
         <p class="bio-title">Personal Trainer · WNBF Pro Bodybuilder · St. Louis</p>
 
-        <!-- Flex Facility callout -->
-        <div class="flex-callout">
+        <!-- Training-locations callout -->
+        <a href="#locations" class="flex-callout">
           <div class="fc-logo">🏋️</div>
           <div class="fc-text">
-            <div class="fc-name">The Flex Facility</div>
-            <div class="fc-sub">Resident Trainer · St. Louis, MO</div>
+            <div class="fc-name">Two Training Locations</div>
+            <div class="fc-sub">The Flex Facility · Southside Iron</div>
           </div>
-        </div>
+        </a>
 
         <p class="bio-text">William Anderson is a WNBF Pro Bodybuilder and certified personal trainer based in St. Louis. He built Will Power Fitness Factory on one belief: every client already carries the willpower to transform — they just need the right system and someone who won't let them quit.</p>
         <p class="bio-text">Whether you're chasing fat loss, serious muscle, competition prep, or just want to move and feel better — William builds the program around your life, not the other way around.</p>
@@ -1048,6 +1089,44 @@
         </div>
         <a href="https://book.willpowerfitnessfactory.com/" class="btn-w">Train With William →</a>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TRAINING LOCATIONS ══ -->
+<!-- Official partner gyms where William coaches in person. Each card is one
+     big clickable link out to that facility's own site. -->
+<section class="sec sec-bg" id="locations">
+  <div class="wrap">
+    <div class="sec-hd r">
+      <span class="ey">Where We Train</span>
+      <h2 class="sec-title">OFFICIAL TRAINING LOCATIONS</h2>
+      <p class="sec-sub">William coaches in person out of two partner facilities — one on each side of the river. Tap a gym to visit their site.</p>
+    </div>
+    <div class="loc-grid">
+
+      <a href="https://theflexfacility.com" class="loc-card r" target="_blank" rel="noopener"
+         aria-label="The Flex Facility in Earth City, Missouri — opens theflexfacility.com in a new tab">
+        <div class="loc-plate is-mark">
+          <img src="flex-facility-logo.png" alt="The Flex Facility" width="512" height="512" loading="lazy"/>
+        </div>
+        <div class="loc-name">The Flex Facility</div>
+        <div class="loc-role">Resident Trainer</div>
+        <p class="loc-addr">4132 Shoreline Dr, Ste 1<br/>Earth City, MO 63045</p>
+        <span class="loc-cta">Visit theflexfacility.com →</span>
+      </a>
+
+      <a href="https://southsideiron.com" class="loc-card r" target="_blank" rel="noopener"
+         aria-label="Southside Iron in Columbia, Illinois — opens southsideiron.com in a new tab">
+        <div class="loc-plate is-word">
+          <img src="southside-iron-logo.webp" alt="Southside Iron" width="290" height="119" loading="lazy"/>
+        </div>
+        <div class="loc-name">Southside Iron</div>
+        <div class="loc-role">Official Training Location</div>
+        <p class="loc-addr">324 Southport Dr<br/>Columbia, IL 62236</p>
+        <span class="loc-cta">Visit southsideiron.com →</span>
+      </a>
+
     </div>
   </div>
 </section>
@@ -1141,7 +1220,7 @@
 
 <!-- ══ BOOK CTA ══ -->
 <section class="cta-band" id="contact">
-  <span class="ey r">The Flex Facility · St. Louis, MO · 877-515-3539</span>
+  <span class="ey r">The Flex Facility · Southside Iron · 877-515-3539</span>
   <h2 class="r">READY TO TRAIN?</h2>
   <p class="r">Stop waiting on yourself. Book your first session with William and start the transformation.</p>
   <a href="https://book.willpowerfitnessfactory.com/" class="btn-blk r">Book Your Session →</a>
@@ -1176,7 +1255,8 @@
       <div class="fc-col">
         <h4>Contact</h4>
         <ul>
-          <li>📍 The Flex Facility, St. Louis</li>
+          <li>📍 <a href="https://theflexfacility.com" target="_blank" rel="noopener">The Flex Facility</a>, Earth City MO</li>
+          <li>📍 <a href="https://southsideiron.com" target="_blank" rel="noopener">Southside Iron</a>, Columbia IL</li>
           <li><a href="tel:18775153539">877-515-3539</a></li>
           <li style="line-height:1.4;margin-top:4px;"><a href="mailto:willpowerfitnessfactory@gmail.com">willpowerfitnessfactory<br/>@gmail.com</a></li>
         </ul>
