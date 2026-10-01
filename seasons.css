@@ -1,0 +1,211 @@
+/* ═══════════════════════════════════════════════════════════════════
+   WILL POWER FITNESS FACTORY — SEASONAL LAYER
+
+   Two themes, each scoped to a class that seasons.js puts on <html>:
+
+     .halloween   October 1 – 31
+     .holidays    November 1 – January 1
+
+   Only one is ever active, and outside those windows neither class is
+   set, so the site renders exactly as it does the rest of the year.
+   Nothing here leaks outside its scope: drop the two tags from a page
+   and that page is back to normal with no other edit.
+   ═══════════════════════════════════════════════════════════════════ */
+
+
+/* ── Shared decoration scaffolding ─────────────────────────────────
+   z-index 1 keeps every decoration behind .hero-content (z-index 2),
+   so nothing ever drifts across the lead form or the headline. */
+.s-deco { position: absolute; pointer-events: none; z-index: 1; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   HALLOWEEN
+
+   The base site is already black + orange, so this leans on a violet
+   shift of the greys and keeps the brand pumpkin as the accent rather
+   than repainting the whole page.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.halloween {
+  --black:  #0a0710;
+  --char:   #130e1a;
+  --dark:   #1a1324;
+  --mid:    #241a30;
+  --border: #3a2a4d;
+  --silver: #8b7f99;
+  --light:  #c4b8d1;
+  --white:  #f3eef7;
+  --fire:   #ff7518;   /* pumpkin */
+
+  --haunt:   #8b36d9;  /* witch purple */
+  --haunt-l: #a46ae0;
+  --bone:    #ede6d6;
+}
+
+.halloween .hero-bg-img {
+  filter: grayscale(68%) brightness(0.44) contrast(1.15) sepia(16%);
+}
+
+.halloween .hero-overlay {
+  background:
+    radial-gradient(118% 78% at 78% 16%, rgba(255,117,24,0.20) 0%, rgba(255,117,24,0) 55%),
+    radial-gradient(92% 68% at 12% 28%, rgba(139,54,217,0.26) 0%, rgba(139,54,217,0) 62%),
+    linear-gradient(to bottom,
+      rgba(10,7,16,0.45) 0%,
+      rgba(10,7,16,0.16) 35%,
+      rgba(10,7,16,0.72) 65%,
+      rgba(10,7,16,0.98) 100%);
+}
+
+/* Low violet fog drifting across the base of the hero. */
+.halloween .hero::after {
+  content: ''; position: absolute; z-index: 1; pointer-events: none;
+  left: -50%; right: -50%; bottom: 0; height: 40%;
+  background: radial-gradient(58% 100% at 50% 100%, rgba(139,54,217,0.20) 0%, rgba(139,54,217,0) 72%);
+  animation: hw-fog 26s ease-in-out infinite alternate;
+}
+@keyframes hw-fog {
+  from { transform: translateX(-6%); }
+  to   { transform: translateX(6%); }
+}
+
+.hw-web { top: 60px; width: 160px; height: 160px; color: #d8cee6; opacity: 0.42; }
+.hw-web--l { left: 0; }
+.hw-web--r { right: 0; transform: scaleX(-1); }
+@media (max-width: 760px) { .hw-web { width: 104px; height: 104px; } }
+
+/* Moonlit rather than silhouetted — the hero behind them is near-black.
+   Negative delays start them mid-flight, so bats are on screen at load
+   rather than after a 30s wait. */
+.hw-bat { width: 44px; color: var(--bone); opacity: 0.55; }
+.hw-bat--1 { top: 14%; left: -12%; animation: hw-fly-a 34s linear infinite -5s; }
+.hw-bat--2 { top: 27%; left: -12%; width: 30px; opacity: .42; animation: hw-fly-b 46s linear infinite -26s; }
+.hw-bat--3 { top:  8%; left: -12%; width: 36px; opacity: .48; animation: hw-fly-a 40s linear infinite -18s; }
+.hw-bat svg { display: block; width: 100%; height: auto; animation: hw-flap 0.9s ease-in-out infinite alternate; }
+
+@keyframes hw-fly-a { from { transform: translate(0,0); } to { transform: translate(128vw,-7vh); } }
+@keyframes hw-fly-b { from { transform: translate(0,0); } to { transform: translate(128vw, 9vh); } }
+@keyframes hw-flap  { from { transform: scaleY(1); }      to { transform: scaleY(0.62); } }
+
+.halloween .marquee { background: var(--fire); }
+.halloween .mi { color: #1a0d02; }
+.halloween .ms { color: #1a0d02; opacity: 0.75; }
+
+.halloween .ey { color: var(--haunt-l); }
+.halloween .mission-block .ey,
+.halloween .loc-role { color: var(--fire); }
+.halloween .cta-band .ey { color: rgba(26,13,2,0.62); }
+
+.halloween .cred { border-color: rgba(139,54,217,0.5); color: var(--bone); }
+.halloween .prog-n { color: rgba(255,117,24,0.18); }
+.halloween .prog-card:hover .prog-n { color: rgba(255,117,24,0.4); }
+.halloween .prog-card::after { background: var(--fire); }
+.halloween .competition-badge { border-color: rgba(255,117,24,0.5); }
+
+.halloween .btn-fire { box-shadow: 0 0 22px rgba(255,117,24,0.3); }
+.halloween .btn-fire:hover { box-shadow: 0 0 30px rgba(255,117,24,0.45); }
+
+.halloween .loc-card:hover { border-color: var(--haunt); }
+.halloween .loc-card:hover .loc-cta { color: var(--haunt-l); }
+
+.halloween .cta-band { background: linear-gradient(135deg, #ff7518 0%, #ff9336 100%); }
+.halloween .cta-band p { color: #43240a; }
+.halloween .btn-blk { background: #140b1c; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   HOLIDAYS
+
+   Midnight-blue cast with warm gold and holly red. The brand orange is
+   left alone on the primary CTAs — conversion elements stay familiar
+   while the page around them dresses up.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.holidays {
+  --black:  #060a12;   /* midnight */
+  --char:   #0c1320;
+  --dark:   #121b2b;
+  --mid:    #1b2739;
+  --border: #2b3c53;
+  --silver: #7f8da3;
+  --light:  #b9c6d8;
+  --white:  #f2f7fc;
+  /* --fire stays the brand orange */
+
+  --holly:   #d6243c;
+  --holly-l: #f2566b;  /* small text: the deep holly goes muddy on navy */
+  --pine:  #1a6b49;
+  --gold:  #e8b45a;
+  --ice:   #9fd8f2;
+}
+
+.holidays .hero-bg-img {
+  filter: grayscale(34%) brightness(0.52) contrast(1.08);
+}
+
+.holidays .hero-overlay {
+  background:
+    radial-gradient(110% 70% at 50% 2%,  rgba(232,180,90,0.20) 0%, rgba(232,180,90,0) 52%),
+    radial-gradient(95% 72% at 14% 26%, rgba(63,120,190,0.26) 0%, rgba(63,120,190,0) 62%),
+    linear-gradient(to bottom,
+      rgba(6,10,18,0.42) 0%,
+      rgba(6,10,18,0.14) 35%,
+      rgba(6,10,18,0.72) 65%,
+      rgba(6,10,18,0.98) 100%);
+}
+
+/* Garland strung across the top of the hero. */
+.hd-garland { top: 56px; left: 0; width: 100%; }
+.hd-garland .hd-wire { stroke: #35506b; stroke-width: 2.4; fill: none; }
+.hd-garland .hd-bulb { animation: hd-twinkle 3.2s ease-in-out infinite alternate; }
+@keyframes hd-twinkle { from { opacity: .95; } to { opacity: .42; } }
+
+/* Snow stays inside the hero, behind the content — it never falls
+   across body copy further down the page. */
+.hd-flake {
+  top: -6%; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 6px rgba(255,255,255,0.7);
+  animation-name: hd-fall; animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes hd-fall {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(var(--drift, 0px), 118vh); }
+}
+
+.holidays .marquee { background: #b3122b; }
+.holidays .mi { color: #fff3e6; }
+.holidays .ms { color: #fff3e6; opacity: 0.8; }
+
+.holidays .ey { color: var(--gold); }
+.holidays .mission-block .ey,
+.holidays .loc-role { color: var(--holly-l); }
+.holidays .cta-band .ey { color: rgba(255,244,230,0.7); }
+
+.holidays .cred { border-color: rgba(159,216,242,0.4); color: #e4f1fb; }
+.holidays .prog-n { color: rgba(232,180,90,0.16); }
+.holidays .prog-card:hover .prog-n { color: rgba(232,180,90,0.38); }
+.holidays .prog-card::after { background: var(--gold); }
+.holidays .competition-badge { border-color: rgba(232,180,90,0.45); }
+
+.holidays .btn-fire { box-shadow: 0 0 22px rgba(255,107,0,0.25); }
+
+.holidays .loc-card:hover { border-color: var(--gold); }
+.holidays .loc-card:hover .loc-cta { color: var(--gold); }
+
+/* Evergreen closing band with a gold button. */
+.holidays .cta-band { background: linear-gradient(135deg, #0f4a35 0%, #15603f 55%, #1b7049 100%); }
+.holidays .cta-band::before { color: rgba(255,255,255,0.055); }
+.holidays .cta-band h2 { color: #fdf6ea; }
+.holidays .cta-band p  { color: #bedcc9; }
+.holidays .btn-blk { background: var(--gold); color: #12271c; }
+
+
+/* ── Respect reduced-motion: keep the theme, drop the movement ─────── */
+@media (prefers-reduced-motion: reduce) {
+  .halloween .hero::after,
+  .hw-bat, .hw-bat svg,
+  .hd-flake, .hd-garland .hd-bulb { animation: none; }
+  .hw-bat, .hd-flake { display: none; }
+}
