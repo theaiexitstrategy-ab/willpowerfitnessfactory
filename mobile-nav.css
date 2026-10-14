@@ -1,0 +1,48 @@
+/* © 2026 GoElev8.ai | Aaron Bryant. All rights reserved. Unauthorized use prohibited. */
+/* Mobile menu — paired with /mobile-nav.js. The button only renders while
+   the page's own breakpoint is hiding .nav-links (nav.nav-collapsed). */
+
+.nav-toggle { display: none; }
+nav.nav-collapsed .nav-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-left: auto; margin-right: 10px;
+  height: 40px; min-width: 44px; padding: 0 12px;
+  background: transparent; color: #f2f2f2;
+  border: 1px solid #363636; border-radius: 0; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+  font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase;
+}
+.nav-toggle:focus-visible,
+nav.nav-open .nav-links a:focus-visible { outline: 2px solid #FF8633; outline-offset: 2px; }
+.nav-toggle-bars { display: inline-flex; flex-direction: column; justify-content: space-between; width: 18px; height: 12px; }
+.nav-toggle-bars span { display: block; height: 2px; background: currentColor; transition: transform 0.2s, opacity 0.2s; }
+nav.nav-open .nav-toggle-bars span:nth-child(1) { transform: translateY(5px) rotate(45deg); }
+nav.nav-open .nav-toggle-bars span:nth-child(2) { opacity: 0; }
+nav.nav-open .nav-toggle-bars span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+@media (max-width: 400px) {
+  .nav-toggle-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap;
+  }
+}
+
+nav.nav-open .nav-links {
+  display: flex !important;
+  position: fixed; top: var(--nav-h, 60px); left: 0; right: 0;
+  flex-direction: column; align-items: stretch; gap: 0;
+  margin: 0; padding: 6px 0 12px;
+  background: rgba(11,11,11,0.98);
+  border-bottom: 1px solid #363636;
+  max-height: calc(100vh - var(--nav-h, 60px)); overflow-y: auto;
+  box-shadow: 0 18px 30px -18px rgba(0,0,0,0.8);
+}
+nav.nav-open .nav-links li { border-top: 1px solid #202020; }
+nav.nav-open .nav-links li:first-child { border-top: 0; }
+nav.nav-open .nav-links a {
+  display: block; padding: 15px 20px;
+  font-size: 0.95rem !important; letter-spacing: 0.2em !important;
+  color: #d0d0d0;
+}
+nav.nav-open .nav-links a:hover { color: #f2f2f2; }
+nav.nav-open .nav-links a.active,
+nav.nav-open .nav-links a[aria-current="page"] { color: #FF6B00; }

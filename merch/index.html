@@ -6,6 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Merch | Will Power Fitness Factory</title>
   <meta name="description" content="Official Will Power Fitness Factory merch — tees, tanks, and gear. Train hard. Represent harder."/>
+  <meta property="og:title" content="Merch | Will Power Fitness Factory"/>
+  <meta property="og:description" content="Official Will Power Fitness Factory merch — tees, tanks, and gear. Train hard. Represent harder."/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://willpowerfitnessfactory.com/merch/"/>
+  <meta property="og:image" content="https://willpowerfitnessfactory.com/og-image.jpg"/>
+  <meta property="og:image:width" content="1200"/>
+  <meta property="og:image:height" content="630"/>
+  <meta name="twitter:card" content="summary_large_image"/>
 
   <!-- GoElev8 first-party tracker — page views + form captures
        roll into the WPFF portal Analytics tab. Lives alongside GA4
@@ -25,6 +33,9 @@
     gtag('config', 'G-2EGV382R9C');
   </script>
 
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png"/>
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=Barlow:wght@300;400&display=swap" rel="stylesheet"/>
@@ -70,7 +81,7 @@
       border-bottom: 1px solid var(--border);
     }
     .nav-logo { display: inline-flex; align-items: center; }
-    .nav-logo img { display: block; height: 38px; width: auto; }
+    .nav-logo img { display: block; height: 30px; width: auto; }
     .nav-links { display: flex; align-items: center; gap: 1.5rem; list-style: none; }
     .nav-links a {
       font-family: 'Barlow Condensed', sans-serif; font-weight: 500;
@@ -696,7 +707,7 @@
     footer { background: #070707; border-top: 1px solid var(--border); }
     .footer-grid { display: grid; grid-template-columns: 1fr; gap: 32px; padding: 52px 0 40px; }
     @media(min-width:700px){ .footer-grid { grid-template-columns: 2fr 1fr 1fr; gap: 48px; } }
-    .footer-logo img { display: block; height: 32px; width: auto; }
+    .footer-logo img { display: block; height: 28px; width: auto; }
     .footer-tagline { font-family:'Barlow',sans-serif; font-weight:300; font-size:0.85rem; color:var(--silver); line-height:1.65; margin-top:12px; max-width:30ch; }
     .social-row { display:flex; gap:8px; margin-top:18px; }
     .soc { width:34px; height:34px; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.62rem; letter-spacing:0.06em; color:var(--silver); text-decoration:none; transition:border-color 0.2s,color 0.2s; }
@@ -707,7 +718,7 @@
     .fc-col a { color:var(--silver); text-decoration:none; transition:color 0.2s; }
     .fc-col a:hover { color:var(--white); }
     .footer-bot { border-top:1px solid var(--border); padding:18px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
-    .footer-bot p { font-family:'Barlow',sans-serif; font-weight:300; font-size:0.7rem; color:#404040; }
+    .footer-bot p { font-family:'Barlow',sans-serif; font-weight:300; font-size:0.7rem; color:#8a8a8a; }
     .footer-bot a { color:var(--silver); text-decoration:none; }
     .footer-bot a:hover { color:var(--white); }
 
@@ -720,6 +731,9 @@
   <!-- Seasonal layer — picks its own theme by date; see seasons.js -->
   <link rel="stylesheet" href="/seasons.css"/>
   <script src="/seasons.js"></script>
+  <!-- Mobile menu — see mobile-nav.js -->
+  <link rel="stylesheet" href="/mobile-nav.css"/>
+  <script src="/mobile-nav.js" defer></script>
 </head>
 <body>
 
@@ -728,7 +742,7 @@
 ═════════════════════════════════════════════════════════════════ -->
 <nav class="site-nav">
   <a href="/" class="nav-logo" aria-label="Will Power Fitness Factory">
-    <img src="/wpff-logo-white.png" alt="Will Power Fitness Factory"/>
+    <img src="/wpff-logo-white-trim.png" alt="Will Power Fitness Factory"/>
   </a>
   <ul class="nav-links">
     <li><a href="/#programs">Programs</a></li>
@@ -806,7 +820,7 @@
     <div class="footer-grid">
       <div>
         <a href="/" class="footer-logo" aria-label="Will Power Fitness Factory">
-          <img src="/wpff-logo-white.png" alt="Will Power Fitness Factory"/>
+          <img src="/wpff-logo-white-trim.png" alt="Will Power Fitness Factory"/>
         </a>
         <p class="footer-tagline">Empowering individuals to transform through mental determination and physical training. St. Louis, MO.</p>
         <div class="social-row">
@@ -852,7 +866,7 @@
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-img" id="modalImg">
-      <img id="modalImgEl" src="" alt=""/>
+      <img id="modalImgEl" alt=""/>
     </div>
     <div class="modal-body">
       <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
