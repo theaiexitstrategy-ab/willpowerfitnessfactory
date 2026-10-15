@@ -288,6 +288,26 @@
       font-size: 0.95rem; line-height: 1.5; color: var(--light);
     }
 
+    /* Publish yes/no — bordered rows so each answer is a big tap target */
+    .choice {
+      display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+      padding: 14px 16px; margin-bottom: 8px;
+      background: var(--mid); border: 1px solid var(--border);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .choice:hover { border-color: var(--silver); }
+    .choice:has(input:checked) { border-color: var(--fire); background: var(--fire-dim); }
+    .choice input {
+      flex: 0 0 auto; width: 22px; height: 22px; margin-top: 1px;
+      accent-color: var(--fire); cursor: pointer;
+    }
+    .choice span {
+      font-family: 'Barlow', sans-serif; font-weight: 300;
+      font-size: 0.95rem; line-height: 1.5; color: var(--light);
+    }
+    .choice strong { font-weight: 400; color: var(--white); }
+    #publishField[aria-invalid="true"] .choice { border-color: #ef4444; }
+
     /* Honeypot — off-screen, never reachable by keyboard or AT */
     .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 
@@ -378,6 +398,11 @@
       background: var(--fire-dim); text-align: left;
       font-family: 'Barlow', sans-serif; font-weight: 400;
       font-size: 0.95rem; line-height: 1.55; color: var(--white);
+    }
+    .private-note {
+      margin: 18px auto 0; max-width: 46ch;
+      font-family: 'Barlow', sans-serif; font-weight: 400;
+      font-size: 0.92rem; line-height: 1.55; color: var(--light);
     }
     .share-btns { display: grid; gap: 12px; margin-top: 26px; }
     .share-btns .btn-fire, .share-btns .btn-ghost { width: 100%; }
@@ -580,12 +605,22 @@
           <p class="field-err" id="phoneErr"></p>
         </div>
 
-        <!-- Consents -->
-        <div class="field">
-          <label class="check">
-            <input type="checkbox" id="featureConsent" name="feature_consent"/>
-            <span>OK for Will Power Fitness Factory to feature my review on its website and social media.</span>
+        <!-- Publish consent: the customer decides, and "No" is enforced
+             server-side (publish_consent=false can never be published). -->
+        <fieldset class="field" id="publishField" aria-describedby="publishErr">
+          <legend class="lbl">Can we publish your review? <span class="req" aria-hidden="true">*</span><span class="sr-only">(required)</span></legend>
+          <label class="choice">
+            <input type="radio" name="publish_consent" value="yes" id="publishYes"/>
+            <span><strong>Yes, publish it</strong> on this website and Will Power Fitness Factory’s social media, with my name as entered above.</span>
           </label>
+          <label class="choice">
+            <input type="radio" name="publish_consent" value="no" id="publishNo"/>
+            <span><strong>No, keep it private.</strong> Only Coach Will sees it.</span>
+          </label>
+          <p class="field-err" id="publishErr"></p>
+        </fieldset>
+
+        <div class="field">
           <label class="check" id="smsConsentRow" hidden>
             <input type="checkbox" id="smsConsent" name="sms_consent"/>
             <span id="smsConsentText">Text me one reminder to share my review on Google. Msg &amp; data rates may apply. Reply STOP to opt out.</span>
@@ -620,6 +655,8 @@
         <div class="copy-row">
           <button type="button" class="btn-ghost btn-sm" id="copyAgain">Copy again</button>
         </div>
+
+        <p class="private-note" id="privateNote" hidden>Your review is private — it won’t be published here. Only Coach Will will see it.</p>
 
         <p class="low-note" id="lowNote" hidden>Thanks for the honest feedback — Coach Will has been notified and may reach out to make it right.</p>
 
@@ -827,6 +864,15 @@
     });
   });
 
+  // 'yes' | 'no' | '' (not answered yet)
+  function publishChoice() {
+    const c = document.querySelector('input[name=publish_consent]:checked');
+    return c ? c.value : '';
+  }
+  $('publishField').addEventListener('change', function () {
+    setErr('publishErr', '', $('publishField'));
+  });
+
   function validate() {
     let first = null;
     const mark = function (ok, errId, msg, field, focusEl) {
@@ -845,6 +891,7 @@
     const digits = phone.value.replace(/\D/g, '');
     mark(!phone.value.trim() || digits.length === 10 || (digits.length === 11 && digits[0] === '1') || phone.value.trim()[0] === '+',
       'phoneErr', 'That phone number doesn’t look right. Try a 10-digit US number.', phone);
+    mark(!!publishChoice(), 'publishErr', 'Please choose whether we can publish your review.', $('publishField'), $('publishYes'));
     return first;
   }
 
@@ -880,7 +927,9 @@
       email: $('email').value.trim(),
       phone: phone.value.trim(),
       event_type: eventType === '__none' ? '' : eventType,
-      feature_consent: $('featureConsent').checked,
+      // One customer answer drives both flags; "no" is enforced server-side.
+      publish_consent: publishChoice() === 'yes',
+      feature_consent: publishChoice() === 'yes',
       sms_consent: !!phone.value.trim() && $('smsConsent').checked,
       sms_consent_text: $('smsConsentText').textContent.trim(),
       source_url: location.href,
@@ -962,6 +1011,7 @@
 
     // Additive only: low ratings get one extra line, nothing is removed.
     $('lowNote').hidden = payload.rating > 3;
+    $('privateNote').hidden = payload.publish_consent;
 
     form.hidden = true;
     $('thanks').hidden = false;
