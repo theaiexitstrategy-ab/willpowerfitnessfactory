@@ -1174,6 +1174,16 @@
 </div>
 
 <!-- ══ RESULTS ══ -->
+<section class="sec" id="events" data-events-section style="display:none;">
+  <div class="wrap">
+    <div class="sec-hd">
+      <span class="ey">What's Happening</span>
+      <h2 class="sec-title">UPCOMING EVENTS</h2>
+    </div>
+    <div data-goelev8-events="willpower-fitness" data-title="" data-accent="var(--fire)" data-theme="dark" style="margin-top:28px;"></div>
+  </div>
+</section>
+
 <section class="sec sec-bg" id="results">
   <div class="wrap">
     <div class="sec-hd r">
@@ -1426,5 +1436,14 @@
     });
   })();
 </script>
+<!-- GoElev8 events: published from the portal (Bookings → Events).
+     The section stays hidden until there's at least one upcoming event. -->
+<script>
+  document.addEventListener('goelev8:events', function (e) {
+    var s = e.target.closest('[data-events-section]');
+    if (s && e.detail && e.detail.count) s.style.display = '';
+  });
+</script>
+<script src="https://portal.goelev8.ai/embed/events.js" async></script>
 </body>
 </html>
