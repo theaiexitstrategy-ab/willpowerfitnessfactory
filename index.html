@@ -654,6 +654,13 @@
     .sms-p { font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 0.88rem; color: var(--silver); margin-top: 6px; }
     .sms-form { display: flex; flex-direction: column; gap: 8px; }
     @media(min-width:400px){ .sms-form { flex-direction: row; gap: 0; } }
+    /* Turnstile slot: takes no space until Cloudflare puts a widget in it.
+       In the SMS row it sits just below the input + button (out of the flex
+       flow, so the row's layout is untouched); it only shows when
+       Cloudflare asks for an interaction. */
+    .wpff-captcha:empty { display: none; }
+    .sms-form { position: relative; }
+    .sms-form .wpff-captcha { position: absolute; top: 100%; left: 0; margin-top: 8px; z-index: 5; }
     .sms-input { background: var(--mid); border: 1px solid var(--border); color: var(--white); font-family: 'Barlow', sans-serif; font-size: 0.92rem; padding: 13px 16px; outline: none; width: 100%; transition: border-color 0.2s; }
     @media(min-width:400px){ .sms-input { width: 230px; border-right: none; } }
     .sms-input::placeholder { color: var(--silver); }
@@ -831,6 +838,8 @@
   <!-- Mobile menu — see mobile-nav.js -->
   <link rel="stylesheet" href="/mobile-nav.css"/>
   <script src="/mobile-nav.js" defer></script>
+  <!-- Bot protection (Cloudflare Turnstile) for the lead forms; see captcha.js -->
+  <script src="/captcha.js" defer></script>
 </head>
 <body>
 
@@ -890,6 +899,8 @@
           <option>General Fitness</option>
           <option>Other</option>
         </select>
+        <input type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"/>
+        <div class="wpff-captcha"></div>
         <button type="submit" class="btn-fire" id="leadSubmit">Let's Go 🔥</button>
       </form>
 
@@ -1164,7 +1175,9 @@
       <div>
         <form class="sms-form" id="smsForm" novalidate>
           <input class="sms-input" type="tel" placeholder="(314) 000-0000" id="smsInput" name="phone" required autocomplete="tel"/>
+          <input type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"/>
           <button type="submit" class="sms-btn" id="smsBtn">Text Me →</button>
+          <div class="wpff-captcha"></div>
         </form>
         <p class="sms-note">By submitting you agree to receive SMS from Will Power Fitness Factory. Reply STOP to opt out anytime.</p>
         <p class="sms-status" id="smsStatus" hidden></p>
@@ -1329,6 +1342,7 @@
       status.hidden = true;
 
       try {
+        const captcha_token = await wpffCaptcha.token(form);
         const res = await fetch('/api/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1336,10 +1350,13 @@
             phone,
             partial_capture: true,
             gym: 'willpowerfitnessfactory',
-            source: 'homepage_sms_band'
+            source: 'homepage_sms_band',
+            captcha_token,
+            _hp: form.elements._hp ? form.elements._hp.value : ''
           })
         });
         if (!res.ok) {
+          wpffCaptcha.reset(form);
           const out = await res.json().catch(() => ({}));
           throw new Error(out.error || 'Something went wrong on our end.');
         }
@@ -1391,12 +1408,15 @@
 
       try {
         const data = Object.fromEntries(new FormData(form).entries());
+        delete data['cf-turnstile-response'];
+        const captcha_token = await wpffCaptcha.token(form);
         const res = await fetch('/api/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...data, gym: 'willpowerfitnessfactory', source: 'homepage' })
+          body: JSON.stringify({ ...data, captcha_token, gym: 'willpowerfitnessfactory', source: 'homepage' })
         });
         if (!res.ok) {
+          wpffCaptcha.reset(form);
           const out = await res.json().catch(() => ({}));
           throw new Error(out.error || 'Something went wrong on our end.');
         }

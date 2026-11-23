@@ -18,6 +18,8 @@
 // when a fallback path saved the data. Failures only surface to the
 // customer if every path errored out (extremely rare).
 
+const { botReasons, captchaEnabled, verifyCaptcha, clientIp } = require('./_lib/bot-guard');
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -48,6 +50,32 @@ module.exports = async (req, res) => {
       }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(body.email))) {
         return res.status(400).json({ error: 'Please enter a valid email address.' });
+      }
+    }
+
+    // ─── 0. BOT PROTECTION. Runs before the portal forward and the
+    //        Twilio send, so a bot costs nothing. See api/_lib/bot-guard.js.
+    const ip = clientIp(req);
+    const reasons = botReasons({
+      name: [body.first_name, body.last_name].filter(Boolean).join(' '),
+      email: body.email,
+      honeypot: body._hp,
+    });
+    if (reasons.length) {
+      // Same response a person gets, so bots can't tell what tripped them.
+      console.warn('[/api/lead] BOT DROPPED', JSON.stringify({ reasons, source: body.source || null }));
+      return res.status(200).json({ ok: true });
+    }
+    let captchaVerified = false;
+    if (captchaEnabled()) {
+      const v = await verifyCaptcha(body.captcha_token, ip);
+      if (v.ok) {
+        captchaVerified = true;
+      } else if (!v.unavailable) {
+        console.warn('[/api/lead] CAPTCHA FAILED', JSON.stringify({ missing: !!v.missing, errors: v.errors || [] }));
+        return res.status(403).json({
+          error: 'Please complete the quick "I\'m human" check and try again.',
+        });
       }
     }
 
@@ -119,6 +147,11 @@ module.exports = async (req, res) => {
           contact_email: payload.email,
           contact_phone: payload.phone,
           title:         partial ? 'Phone-only quick capture' : 'Free First Session form',
+          // We verified the visitor's Turnstile token above (it's single-use,
+          // so the portal can't re-verify it). The portal trusts this flag
+          // because the body is HMAC-signed with the shared ingest secret.
+          captcha_verified: captchaVerified,
+          client_ip:     ip,
           payload: {
             first_name: payload.first_name,
             last_name:  payload.last_name,
