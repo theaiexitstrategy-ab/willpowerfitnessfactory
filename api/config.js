@@ -9,5 +9,10 @@ module.exports = (req, res) => {
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
   res.status(200).json({
     stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    // Turnstile site key (public). Only handed out when the secret is set
+    // too, so the page never renders a widget the server can't verify.
+    // That's the same rule /api/lead uses to decide whether to enforce.
+    turnstileSiteKey: (process.env.TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY)
+      ? process.env.TURNSTILE_SITE_KEY.trim() : '',
   });
 };

@@ -527,6 +527,9 @@
     .form-grid {
       display: grid; grid-template-columns: 1fr; gap: 16px;
     }
+    /* Turnstile slot: takes no space until Cloudflare puts a widget in it. */
+    .wpff-captcha:empty { display: none; }
+    .wpff-captcha { margin-top: 16px; }
     @media (min-width: 600px) {
       .form-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
       .form-grid .full { grid-column: 1 / -1; }
@@ -676,6 +679,8 @@
   <!-- Mobile menu — see mobile-nav.js -->
   <link rel="stylesheet" href="/mobile-nav.css"/>
   <script src="/mobile-nav.js" defer></script>
+  <!-- Bot protection (Cloudflare Turnstile) for the sponsor form; see captcha.js -->
+  <script src="/captcha.js" defer></script>
 </head>
 <body>
 
@@ -963,6 +968,8 @@
           <textarea id="sp-msg" name="message" placeholder="Tell us about your brand, your audience, and what a partnership with Will would look like."></textarea>
         </div>
       </div>
+      <input type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"/>
+      <div class="wpff-captcha"></div>
       <button class="form-submit" id="sp-submit" type="submit">Request Partnership Details →</button>
       <div class="form-msg" id="sp-msg" role="status"></div>
     </form>
@@ -1089,6 +1096,7 @@
     submitBtn.textContent = 'Sending…';
 
     try {
+      const captcha_token = await wpffCaptcha.token(form);
       const res = await fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1099,10 +1107,14 @@
           phone: data.phone,
           goal,
           source: 'sponsor',
-          gym: 'willpowerfitnessfactory'
+          gym: 'willpowerfitnessfactory',
+          captcha_token,
+          _hp: data._hp || ''
         })
       });
       const out = await res.json().catch(() => ({}));
+      // Tokens are single-use: get a fresh one whatever happened.
+      wpffCaptcha.reset(form);
       if (!res.ok) throw new Error(out.error || 'Submission failed');
       setMsg('Got it. Will reach out within 24–48 hours. Thanks for reaching out.', 'ok');
       form.reset();
